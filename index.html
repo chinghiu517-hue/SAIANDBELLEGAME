@@ -3,15 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#fcf6ed">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="熊熊王國">
   <title>微笑熊熊王國：風與重量 Ultimate</title>
-
-  <!-- PWA Manifest 行動裝置安裝設定 -->
-  <link rel="manifest" id="manifest-placeholder">
-
   <style>
     :root {
       --bg-color: #fcf6ed;
@@ -49,8 +41,10 @@
     .btn-bear { background: linear-gradient(135deg, var(--primary-bear), var(--primary-bear-dark)); }
     .btn-pig { background: linear-gradient(135deg, var(--primary-pig), var(--primary-pig-dark)); }
     .btn-skill { background: linear-gradient(135deg, #a18cd1, #fbc2eb); font-size: 0.8rem; padding: 6px 12px; }
+    .btn-discard { background: #e0e0e0; color: #666; font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; border: none; cursor: pointer; margin-top: 4px; }
+    .btn-discard:active { background: #d0d0d0; }
 
-    #start-screen { justify-content: center; align-items: center; gap: 12px; text-align: center; }
+    #start-screen { justify-content: center; align-items: center; gap: 10px; text-align: center; }
     .hero-icon { font-size: 3.5rem; margin-bottom: 5px; }
 
     .mode-card {
@@ -76,10 +70,10 @@
     .card {
       background: var(--panel-bg); border: 2px solid #e2dcd5; border-radius: 12px;
       padding: 6px; width: 32%; display: flex; flex-direction: column; align-items: center;
-      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; min-height: 150px; transition: transform 0.2s;
+      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; min-height: 160px; transition: transform 0.2s;
     }
     .card.selected { border-color: var(--primary-bear-dark); background-color: #fff0f3; transform: translateY(-5px); }
-    .card-icon { font-size: 2rem; margin: 2px 0; }
+    .card-icon { font-size: 1.8rem; margin: 2px 0; }
     .card-title { font-size: 0.8rem; font-weight: bold; text-align: center; }
     .card-badge { font-size: 0.65rem; padding: 2px 5px; border-radius: 8px; background: #eee; margin-top: 2px; }
     .card-desc { font-size: 0.65rem; color: var(--text-muted); text-align: center; margin: 2px 0; }
@@ -98,23 +92,41 @@
     .log-box { background: rgba(255,255,255,0.85); border-radius: 8px; padding: 6px 10px; font-size: 0.8rem; height: 48px; overflow-y: auto; margin-top: 6px; border-left: 4px solid var(--accent-honey-dark); }
     .rank-badge { font-size: 3.5rem; font-weight: 900; text-align: center; margin: 8px 0; background: linear-gradient(45deg, #f6d365, #fda085); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .comment-box { background: #fff; padding: 12px; border-radius: 12px; font-size: 0.85rem; color: #5c4b51; margin: 10px 0; border: 1px dashed #f092a9; line-height: 1.5; }
-    
-    #pwa-install-btn { display: none; background: #58c4b1; margin-bottom: 10px; }
     .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
     @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+
+    .modal-overlay { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: #fff; padding: 20px; border-radius: var(--border-radius); width: 88%; max-height: 80%; overflow-y: auto; box-shadow: var(--shadow); }
+    .modal-content h2 { margin-bottom: 10px; color: var(--text-main); }
+    .modal-content ul { padding-left: 20px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
   </style>
 </head>
 <body>
 
 <div id="app">
+  <!-- 玩法說明彈窗 -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>📖 遊戲玩法說明</h2>
+      <ul>
+        <li><b>回合流程</b>：遊戲共 15 回合，每回合由小熊熊先選擇卡牌，再交給毛巾豬擺放建築。</li>
+        <li><b>分數盲測</b>：<b>前 10 回合會即時顯示得分，第 11 回合起分數將被隱藏（顯示 🔒 隱藏）</b>，考驗你的心算與大局觀！</li>
+        <li><b>小熊熊 (P1)</b>：消耗蜂蜜選擇卡牌發送給毛巾豬。可點擊<b>「🗑️ 棄牌」</b>將不合適的卡牌拋棄並免費抽換新牌。</li>
+        <li><b>毛巾豬 (P2)</b>：負責將傳遞過來的卡牌放置在網格地形上，打造最強建築鏈。</li>
+        <li><b>地形限制</b>：地圖上有許多無法建築的天然障礙（🪨、🌊、🌋、🌸），可擺放區域受限！</li>
+        <li><b>防風與天氣</b>：每回合有隨機天氣，若遇暴風襲來，重量不足（⚓ &lt; 10）且無保護的輕型設施將會被吹走！</li>
+      </ul>
+      <button class="btn" style="width: 100%;" onclick="toggleHelpModal(false)">我明白了！</button>
+    </div>
+  </div>
+
   <!-- 開始畫面 -->
   <div id="start-screen" class="screen active">
     <div class="hero-icon">🐻🎈🐷</div>
     <h1>微笑熊熊王國</h1>
     <p>風與重量：終極版 (Wind & Weight Ultimate)</p>
     <div style="height: 5px;"></div>
-
-    <button id="pwa-install-btn" class="btn" onclick="installPWA()">📲 下載並安裝 App（離線遊玩）</button>
 
     <div class="mode-card" onclick="startGame('coop')">
       <h3>🤝 合作模式（攜手抗風）</h3>
@@ -125,6 +137,8 @@
       <h3>🏆 對決模式（王國大比拼）</h3>
       <p>兩人各抽 2 張地圖建立獨立王國，考驗地形適應力與心機！</p>
     </div>
+
+    <button class="btn" style="background: #90a4ae;" onclick="toggleHelpModal(true)">📖 遊戲玩法說明</button>
   </div>
 
   <!-- 地圖選擇畫面 -->
@@ -147,7 +161,7 @@
   <!-- 玩家一：小熊熊畫面 -->
   <div id="p1-screen" class="screen">
     <div class="game-header">
-      <div class="stat-box"><span class="stat-label">回合</span><span id="p1-round" class="stat-value">1/10</span></div>
+      <div class="stat-box"><span class="stat-label">回合</span><span id="p1-round" class="stat-value">1/15</span></div>
       <div class="stat-box"><span class="stat-label">蜂蜜</span><span id="p1-honey" class="stat-value">🍯 0</span></div>
       <div class="stat-box"><span class="stat-label">總重量</span><span id="p1-weight" class="stat-value">⚓ 0</span></div>
       <div class="stat-box"><span class="stat-label">風力天氣</span><span id="p1-wind" class="stat-value">💨 微風</span></div>
@@ -212,61 +226,7 @@
 </div>
 
 <script>
-  /* --- PWA 動態清單與離線 Service Worker 注入 --- */
-  const manifestData = {
-    "name": "微笑熊熊王國",
-    "short_name": "熊熊王國",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#fcf6ed",
-    "theme_color": "#fcf6ed",
-    "icons": [{
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐻</text></svg>",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
-    }]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
-  document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(manifestBlob));
-
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    document.getElementById('pwa-install-btn').style.display = 'block';
-  });
-
-  function installPWA() {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        document.getElementById('pwa-install-btn').style.display = 'none';
-        deferredPrompt = null;
-      });
-    }
-  }
-
-  // 註冊離線 Service Worker
-  if ('serviceWorker' in navigator) {
-    const swCode = `
-      const CACHE_NAME = 'bear-pig-v1';
-      self.addEventListener('install', (e) => {
-        e.waitUntil(
-          caches.open(CACHE_NAME).then((cache) => cache.addAll(['./']))
-        );
-        self.skipWaiting();
-      });
-      self.addEventListener('fetch', (e) => {
-        e.respondWith(
-          caches.match(e.request).then((res) => res || fetch(e.request))
-        );
-      });
-    `;
-    const swBlob = new Blob([swCode], { type: 'application/javascript' });
-    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
-  }
-
-  /* --- 遊戲核心數據庫 --- */
+  // 基礎卡牌庫
   const CARDS = [
     { id: 'house', name: "小熊熊之家", icon: '🏠', honeyCost: 0, weight: 10, points: 5, desc: '基礎核心建築。' },
     { id: 'tree', name: '防風樹木', icon: '🌲', honeyCost: 1, weight: 15, points: 10, desc: '保護相鄰房屋(+15分)。' },
@@ -279,14 +239,31 @@
     { id: 'glue', name: '烏雲黏膠', icon: '🌧️', honeyCost: 1, weight: 0, points: -10, desc: '【陷阱卡】佔用格子且扣分數！' }
   ];
 
+  // 5 種特色地圖庫
   const MAP_PRESETS = [
-    { id: 'plain', name: '🌲 平原小鎮', desc: '平坦開闊的綠地，無任何障礙地形。', setup: (g) => { g[14] = { ...CARDS[0] }; } },
-    { id: 'mountain', name: '⛰️ 山谷要塞', desc: '含有巨石（🪨）。無法建設，但可為周圍建築加固！', setup: (g) => { g[14] = { ...CARDS[0] }; g[7] = { type: 'obstacle', icon: '🪨' }; g[28] = { type: 'obstacle', icon: '🪨' }; } },
-    { id: 'lake', name: '🏝️ 湖畔群島', desc: '含有水域（🌊）。水邊建設溫泉或風車得分翻倍！', setup: (g) => { g[14] = { ...CARDS[0] }; g[15] = { type: 'water', icon: '🌊' }; g[21] = { type: 'water', icon: '🌊' }; } },
-    { id: 'volcano', name: '🌋 熔岩荒漠', desc: '含有火山岩（🌋）。周圍重量-5，但魔法水晶額外+20分！', setup: (g) => { g[14] = { ...CARDS[0] }; g[8] = { type: 'volcano', icon: '🌋' }; g[27] = { type: 'volcano', icon: '🌋' }; } },
-    { id: 'sakura', name: '🌸 櫻花森林', desc: '古老櫻花樹（🌸）。相鄰建設設施額外+15分！', setup: (g) => { g[14] = { ...CARDS[0] }; g[13] = { type: 'sakura', icon: '🌸' }; g[22] = { type: 'sakura', icon: '🌸' }; } }
+    { 
+      id: 'plain', name: '🌲 狹窄丘陵', desc: '丘陵地形起伏，有多處岩石限制擺放空間。', 
+      setup: (g) => { g[14] = { ...CARDS[0] }; g[0] = g[5] = g[7] = g[12] = g[23] = g[30] = g[35] = { type: 'obstacle', icon: '🪨' }; } 
+    },
+    { 
+      id: 'mountain', name: '⛰️ 險峻山丘', desc: '大量巨石（🪨）封鎖道路，僅剩狹長可建區域！', 
+      setup: (g) => { g[14] = { ...CARDS[0] }; g[1] = g[3] = g[7] = g[8] = g[10] = g[19] = g[22] = g[28] = g[29] = g[34] = { type: 'obstacle', icon: '🪨' }; } 
+    },
+    { 
+      id: 'lake', name: '🏝️ 水鄉澤國', desc: '蜿蜒的水域（🌊）橫跨整個地圖，考驗臨水建築！', 
+      setup: (g) => { g[14] = { ...CARDS[0] }; g[2] = g[3] = g[8] = g[9] = g[15] = g[20] = g[21] = g[26] = g[27] = g[33] = { type: 'water', icon: '🌊' }; } 
+    },
+    { 
+      id: 'volcano', name: '🌋 焦土熔岩', desc: '多處火山裂隙（🌋），減少可建格子且威脅重量！', 
+      setup: (g) => { g[14] = { ...CARDS[0] }; g[0] = g[4] = g[8] = g[11] = g[13] = g[22] = g[25] = g[27] = g[31] = { type: 'volcano', icon: '🌋' }; } 
+    },
+    { 
+      id: 'sakura', name: '🌸 密林櫻境', desc: '古老櫻花樹（🌸）盤踞各地，空間緊湊但加成極高！', 
+      setup: (g) => { g[14] = { ...CARDS[0] }; g[1] = g[6] = g[10] = g[13] = g[18] = g[22] = g[25] = g[29] = g[32] = { type: 'sakura', icon: '🌸' }; } 
+    }
   ];
 
+  // 事件與隨機天氣庫
   const EVENTS = [
     { name: "☀️ 晴空萬里", desc: "本回合所有建築放置額外 +5 分！", scoreBonus: 5, honeyBonus: 0, wind: '微風' },
     { name: "🐝 蜂群大豐收", desc: "小熊熊額外獲得 2 罐蜂蜜！", scoreBonus: 0, honeyBonus: 2, wind: '微風' },
@@ -294,6 +271,7 @@
     { name: "🌪️ 突發暴風", desc: "本回合極度危險！輕型設施有被吹走風險！", scoreBonus: 0, honeyBonus: 0, wind: '暴風' }
   ];
 
+  // 隱藏秘密任務庫
   const QUESTS = [
     { id: 'weight', name: '⚓ 鐵壁城堡', desc: '總重量達到 120 以上', bonus: 40, check: (grid, w) => w >= 120 },
     { id: 'nature', name: '🌲 綠化大師', desc: '地圖上擁有 3 棵以上防風樹', bonus: 35, check: (grid) => grid.filter(c => c?.id === 'tree').length >= 3 },
@@ -301,7 +279,7 @@
   ];
 
   let gameState = {
-    mode: 'coop', round: 1, maxRounds: 10,
+    mode: 'coop', round: 1, maxRounds: 15, // 設為 15 回合（1-10顯分，11-15盲測）
     p1Map: null, p2Map: null, honey: 4, p1Score: 0, p2Score: 0,
     currentEvent: null, p1Quest: null, p2Quest: null,
     p1SkillUsed: false, p2SkillUsed: false, p2StrengthenMode: false,
@@ -310,6 +288,12 @@
   };
 
   let nextTransitionCallback = null;
+
+  function toggleHelpModal(show) {
+    const modal = document.getElementById('help-modal');
+    if (show) modal.classList.add('active');
+    else modal.classList.remove('active');
+  }
 
   function startGame(mode) {
     gameState.mode = mode; gameState.round = 1; gameState.honey = 4;
@@ -436,13 +420,37 @@
   function renderHand() {
     const handContainer = document.getElementById('card-hand');
     handContainer.innerHTML = '';
-    gameState.currentHand.forEach((cardData) => {
+    gameState.currentHand.forEach((cardData, idx) => {
       const cardEl = document.createElement('div');
       cardEl.className = 'card';
-      cardEl.innerHTML = `<div class="card-icon">${cardData.icon}</div><div class="card-title">${cardData.name}</div><div class="card-badge">🍯 ${cardData.honeyCost} | ⚓ ${cardData.weight}</div><div class="card-desc">${cardData.desc}</div>`;
-      cardEl.onclick = () => selectCard(cardData, cardEl);
+      cardEl.innerHTML = `
+        <div class="card-icon">${cardData.icon}</div>
+        <div class="card-title">${cardData.name}</div>
+        <div class="card-badge">🍯 ${cardData.honeyCost} | ⚓ ${cardData.weight}</div>
+        <div class="card-desc">${cardData.desc}</div>
+        <button class="btn-discard" onclick="discardCard(event, ${idx})">🗑️ 棄牌</button>
+      `;
+      cardEl.onclick = (e) => {
+        if (e.target.tagName !== 'BUTTON') selectCard(cardData, cardEl);
+      };
       handContainer.appendChild(cardEl);
     });
+  }
+
+  function discardCard(event, index) {
+    event.stopPropagation();
+    const cardData = gameState.currentHand[index];
+    
+    const qIdx = gameState.dispatchQueue.findIndex(c => c.id === cardData.id);
+    if (qIdx > -1) {
+      gameState.honey += cardData.honeyCost;
+      gameState.dispatchQueue.splice(qIdx, 1);
+    }
+
+    gameState.currentHand[index] = CARDS[Math.floor(Math.random() * CARDS.length)];
+    updateP1UI();
+    renderHand();
+    document.getElementById('p1-log').innerText = `拋棄了「${cardData.name}」，並抽了一張新牌！`;
   }
 
   function selectCard(cardData, element) {
@@ -494,9 +502,17 @@
       document.getElementById('queue-icon').innerText = "✅";
       document.getElementById('p2-log').innerText = "設施已放置完畢，可結束回合。";
     }
+
     const currentScore = gameState.mode === 'vs' ? gameState.p2Score : gameState.p1Score;
     const activeGrid = gameState.mode === 'vs' ? gameState.grids.p2 : gameState.grids.p1;
-    document.getElementById('p2-score').innerText = `✨ ${currentScore}`;
+    
+    // 前 10 回合顯示分數，第 11 回合起顯示 🔒 隱藏
+    if (gameState.round <= 10) {
+      document.getElementById('p2-score').innerText = `✨ ${currentScore}`;
+    } else {
+      document.getElementById('p2-score').innerText = `🔒 隱藏`;
+    }
+
     document.getElementById('p2-weight').innerText = `⚓ ${calculateTotalWeight(activeGrid)}`;
   }
 
@@ -605,10 +621,18 @@
     if (gameState.round >= gameState.maxRounds) { endGame(); return; }
 
     gameState.round++;
+    
+    // 如果剛好進入第 11 回合，提醒玩家開始進入盲測模式
+    let transNotice = "規劃最新卡牌配置！";
+    if (gameState.round === 11) {
+      transNotice = "⚠️ 注意：從本回合（第 11 回合）起，分數將完全隱藏進入盲測模式！";
+    }
+
     switchScreen('transition-screen');
-    setupTransition(`第 ${gameState.round} 回合 - 交給小熊熊`, "🐻", "規劃最新卡牌配置！", "btn-bear", () => startP1Turn());
+    setupTransition(`第 ${gameState.round} 回合 - 交給小熊熊`, "🐻", transNotice, "btn-bear", () => startP1Turn());
   }
 
+  /* --- 評級與動態評價系統 --- */
   function endGame() {
     switchScreen('end-screen');
     const statsContainer = document.getElementById('final-stats');
@@ -622,24 +646,24 @@
       let rank = "C級";
       let comment = "";
 
-      if (finalScore >= 380) rank = "S級";
-      else if (finalScore >= 280) rank = "A級";
-      else if (finalScore >= 180) rank = "B級";
+      if (finalScore >= 500) rank = "S級";
+      else if (finalScore >= 380) rank = "A級";
+      else if (finalScore >= 250) rank = "B級";
 
       if (rank === "S級") {
-        comment = `🎉 <b>【完美王國傳奇】</b> 小熊熊與毛巾豬的默契簡直天衣無縫！不僅突破了 ${finalScore} 分的高分，` +
+        comment = `🎉 <b>【完美王國傳奇】</b> 小熊熊與毛巾豬在後半段的盲測模式中發揮了極致的默契！突破了 ${finalScore} 分的高分，` +
                   (p1QuestDone ? `還成功達成了秘密任務【${gameState.p1Quest.name}】！` : '王國陣容堅不可摧！') +
                   `這座城堡將永遠屹立於風暴之中！`;
       } else if (rank === "A級") {
         comment = `🌟 <b>【穩固的繁榮王國】</b> 表現非常出色！總得分 ${finalScore} 分。` +
                   (p1W >= 100 ? "建築陣列相當穩重防風，" : "建築擺放具備很高的觀賞價值，") +
-                  `只要再多注意一些地形連動，下一次絕對能拿下 S 級！`;
+                  `完美克服了後期的分數隱藏挑戰！`;
       } else if (rank === "B級") {
-        comment = `🔨 <b>【尚可的風暴小鎮】</b> 順利完成了王國建設，獲得 ${finalScore} 分。` +
-                  (p1QuestDone ? `幸好達成了任務【${gameState.p1Quest.name}】拉高總分！` : "可惜有部分設施防風重量不足，") +
-                  `下次試著多善用「蜂蜜磚牆」與「鐵壁加固」吧！`;
+        comment = `🔨 <b>【尚可的風暴小鎮】</b> 順利完成了 15 回合的王國建設，獲得 ${finalScore} 分。` +
+                  (p1QuestDone ? `幸好達成了任務【${gameState.p1Quest.name}】拉高總分！` : "盲測環節分數有所流失，") +
+                  `下次試著多算精算後期牌組！`;
       } else {
-        comment = `🍂 <b>【搖搖欲墜的村莊】</b> 獲得 ${finalScore} 分。王國幾度被狂風吹得東倒西歪！需要重新規劃蜂蜜的使用與建築配置，再接再厲！`;
+        comment = `🍂 <b>【搖搖欲墜的村莊】</b> 獲得 ${finalScore} 分。後期盲測時陣腳有些動搖，再接再厲！`;
       }
 
       document.getElementById('rank-display').innerText = rank;
@@ -663,13 +687,13 @@
 
       if (gameState.p1Score > gameState.p2Score) {
         winnerMsg = "🐻 小熊熊贏得了最終勝利！";
-        comment = `🏆 <b>【小熊熊的勝利】</b> 小熊熊以 ${gameState.p1Score} 分勝出！巧妙的資源調配與卡牌組合擊敗了毛巾豬！`;
+        comment = `🏆 <b>【小熊熊的勝利】</b> 小熊熊以 ${gameState.p1Score} 分勝出！在後半段的暗牌盲測中靠著冷靜心算出奇制勝！`;
       } else if (gameState.p1Score < gameState.p2Score) {
         winnerMsg = "🐷 毛巾豬贏得了最終勝利！";
-        comment = `🏆 <b>【毛巾豬的逆襲】</b> 毛巾豬以 ${gameState.p2Score} 分拿下冠軍！展現出了頂級的建築擺放藝術與地形運用！`;
+        comment = `🏆 <b>【毛巾豬的逆襲】</b> 毛巾豬以 ${gameState.p2Score} 分拿下冠軍！在最後 5 回合隱藏分數時展現了驚人的戰術直覺！`;
       } else {
         winnerMsg = "🤝 難分高下！雙方平手！";
-        comment = `⚖️ <b>【勢均力敵】</b> 兩人的王國建設得不相上下，同為得分大師！`;
+        comment = `⚖️ <b>【勢均力敵】</b> 兩人的王國建設得不相上下，盲測結束後的揭曉時刻太精彩了！`;
       }
 
       document.getElementById('rank-display').innerText = "🏆";
