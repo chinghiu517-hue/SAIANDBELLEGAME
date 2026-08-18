@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>微笑熊熊王國：風與重量 Ultimate</title>
+  <title>笑笑熊國：風與重量 Ultimate</title>
   <style>
     :root {
       --bg-color: #fcf6ed;
@@ -99,7 +99,14 @@
     .modal-overlay.active { display: flex; }
     .modal-content { background: #fff; padding: 20px; border-radius: var(--border-radius); width: 88%; max-height: 80%; overflow-y: auto; box-shadow: var(--shadow); }
     .modal-content h2 { margin-bottom: 10px; color: var(--text-main); }
-    .modal-content ul { padding-left: 20px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 12px; }
+    .modal-content h3 { margin-top: 12px; font-size: 0.95rem; color: var(--accent-honey-dark); }
+    .modal-content ul { padding-left: 20px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
+
+    /* 分數表格樣式 */
+    .score-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.8rem; }
+    .score-table th, .score-table td { border: 1px solid #e2dcd5; padding: 6px; text-align: center; }
+    .score-table th { background-color: #fcf6ed; color: var(--text-main); font-weight: bold; }
+    .score-table td { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -111,20 +118,75 @@
       <h2>📖 遊戲玩法說明</h2>
       <ul>
         <li><b>回合流程</b>：遊戲共 15 回合，每回合由小熊熊先選擇卡牌，再交給毛巾豬擺放建築。</li>
-        <li><b>分數盲測</b>：<b>前 10 回合會即時顯示得分，第 11 回合起分數將被隱藏（顯示 🔒 隱藏）</b>，考驗你的心算與大局觀！</li>
-        <li><b>小熊熊 (P1)</b>：消耗蜂蜜選擇卡牌發送給毛巾豬。可點擊<b>「🗑️ 棄牌」</b>將不合適的卡牌拋棄並免費抽換新牌。</li>
-        <li><b>毛巾豬 (P2)</b>：負責將傳遞過來的卡牌放置在網格地形上，打造最強建築鏈。</li>
-        <li><b>地形限制</b>：地圖上有許多無法建築的天然障礙（🪨、🌊、🌋、🌸），可擺放區域受限！</li>
-        <li><b>防風與天氣</b>：每回合有隨機天氣，若遇暴風襲來，重量不足（⚓ &lt; 10）且無保護的輕型設施將會被吹走！</li>
+        <li><b>分數盲測</b>：<b>前 10 回合會即時顯示得分，第 11 回合起分數將被隱藏（顯示 🔒 隱藏）</b>，考驗心算與大局觀！</li>
+        <li><b>小熊熊 (P1)</b>：消耗蜂蜜選擇卡牌發送給毛巾豬。可點擊<b>「🗑️ 棄牌」</b>免費抽換新牌。</li>
+        <li><b>毛巾豬 (P2)</b>：將傳遞過來的卡牌放置在網格地形上，組建防風陣線。</li>
       </ul>
-      <button class="btn" style="width: 100%;" onclick="toggleHelpModal(false)">我明白了！</button>
+
+      <h3>🏆 評級分數對照表（合作模式）</h3>
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th>評級</th>
+            <th>總得分要求</th>
+            <th>評語簡介</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>🌟 S級</b></td>
+            <td>500 分或以上</td>
+            <td>完美王國傳奇，極致默契與完美抗風！</td>
+          </tr>
+          <tr>
+            <td><b>🥇 A級</b></td>
+            <td>380 - 499 分</td>
+            <td>穩固的繁榮王國，極具戰術眼光！</td>
+          </tr>
+          <tr>
+            <td><b>🥈 B級</b></td>
+            <td>250 - 379 分</td>
+            <td>尚可的風暴小鎮，順利挺過 15 回合。</td>
+          </tr>
+          <tr>
+            <td><b>🥉 C級</b></td>
+            <td>249 分以下</td>
+            <td>搖搖欲墜的村莊，後期需要精算牌組。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>📍 卡牌擺放與地形影響</h3>
+      <ul>
+        <li>🌊 <b>水域（水邊加成）</b>：
+          <br>• 風車發電機（🌪️）放在水邊 ➔ <b>得分翻倍（x2）</b>！
+          <br>• 蜂蜜溫泉（♨️）放在水邊 ➔ <b>額外 +15 分</b>！
+        </li>
+        <li>🌸 <b>櫻花樹（櫻花加成）</b>：
+          <br>• 任何建築放在櫻花樹旁邊 ➔ <b>額外 +15 分</b>！
+        </li>
+        <li>🪨 <b>岩石（擋風避風）</b>：
+          <br>• 建築放在岩石旁邊 ➔ <b>防風重量 +10</b>（更有力對抗暴風）。
+        </li>
+        <li>🌋 <b>火山裂隙（危險區域）</b>：
+          <br>• 魔法水晶（🔮）放在火山旁 ➔ 觸發能量共鳴 <b>額外 +20 分</b>！
+          <br>• 一般建築放在火山旁 ➔ 結構受損 <b>重量 -5</b>。
+        </li>
+        <li>🔗 <b>建築相鄰連動（連線組合）</b>：
+          <br>• 防風樹木（🌲）放在房屋（🏠）旁邊 ➔ 庇護房屋 <b>額外 +15 分</b>！
+          <br>• 魔法水晶（🔮）周圍每有一種不同的建築 ➔ 每個 <b>額外 +10 分</b>！
+          <br>• 鐵壁加固（🛡️）可保護周圍 4 格建築於暴風中<b>不被吹走</b>！
+        </li>
+      </ul>
+
+      <button class="btn" style="width: 100%; margin-top: 10px;" onclick="toggleHelpModal(false)">我明白了！</button>
     </div>
   </div>
 
   <!-- 開始畫面 -->
   <div id="start-screen" class="screen active">
     <div class="hero-icon">🐻🎈🐷</div>
-    <h1>微笑熊熊王國</h1>
+    <h1>笑笑熊國</h1>
     <p>風與重量：終極版 (Wind & Weight Ultimate)</p>
     <div style="height: 5px;"></div>
 
@@ -217,7 +279,7 @@
     <div class="hero-icon">🏰✨</div>
     <h1>王國建設完成！</h1>
     <div id="rank-display" class="rank-badge">S級</div>
-    <p id="end-msg">微笑熊熊王國重建成功！</p>
+    <p id="end-msg">笑笑熊國重建成功！</p>
     <div class="comment-box" id="dynamic-comment">動態評語生成中...</div>
     <div class="mode-card" id="final-stats"></div>
     <div style="flex:1"></div>
@@ -228,37 +290,37 @@
 <script>
   // 基礎卡牌庫
   const CARDS = [
-    { id: 'house', name: "小熊熊之家", icon: '🏠', honeyCost: 0, weight: 10, points: 5, desc: '基礎核心建築。' },
-    { id: 'tree', name: '防風樹木', icon: '🌲', honeyCost: 1, weight: 15, points: 10, desc: '保護相鄰房屋(+15分)。' },
-    { id: 'bath', name: '蜂蜜溫泉', icon: '♨️', honeyCost: 2, weight: 5, points: 15, desc: '相鄰樹木(+10分)；臨水(+15分)。' },
-    { id: 'brick', name: '蜂蜜磚牆', icon: '🧱', honeyCost: 1, weight: 25, points: 5, desc: '提供極高防風重量。' },
-    { id: 'windmill', name: '風車發電機', icon: '🌪️', honeyCost: 2, weight: 8, points: 10, desc: '每回合+1蜂蜜；臨水得分翻倍。' },
+    { id: 'house', name: "小熊熊之家", icon: '🏠', honeyCost: 0, weight: 10, points: 5, desc: '核心建築。鄰樹木+15分。' },
+    { id: 'tree', name: '防風樹木', icon: '🌲', honeyCost: 1, weight: 15, points: 10, desc: '庇護相鄰房屋(+15分)。' },
+    { id: 'bath', name: '蜂蜜溫泉', icon: '♨️', honeyCost: 2, weight: 5, points: 15, desc: '臨水域+15分！' },
+    { id: 'brick', name: '蜂蜜磚牆', icon: '🧱', honeyCost: 1, weight: 25, points: 5, desc: '極高防風重量(+25)。' },
+    { id: 'windmill', name: '風車發電機', icon: '🌪️', honeyCost: 2, weight: 8, points: 10, desc: '每回合+1蜂蜜；臨水得分翻倍！' },
     { id: 'balloon', name: '熱氣球觀光塔', icon: '🎈', honeyCost: 3, weight: -15, points: 30, desc: '減輕總重量，超高分數！' },
-    { id: 'shield', name: '鐵壁加固', icon: '🛡️', honeyCost: 2, weight: 30, points: 8, desc: '保護周圍格不受暴風破壞。' },
-    { id: 'crystal', name: '魔法水晶', icon: '🔮', honeyCost: 3, weight: 5, points: 10, desc: '周圍每種不同建築+10分。' },
+    { id: 'shield', name: '鐵壁加固', icon: '🛡️', honeyCost: 2, weight: 30, points: 8, desc: '保護周圍格不受暴風吹走。' },
+    { id: 'crystal', name: '魔法水晶', icon: '🔮', honeyCost: 3, weight: 5, points: 10, desc: '周圍每種不同建築+10分；鄰火山+20分！' },
     { id: 'glue', name: '烏雲黏膠', icon: '🌧️', honeyCost: 1, weight: 0, points: -10, desc: '【陷阱卡】佔用格子且扣分數！' }
   ];
 
   // 5 種特色地圖庫
   const MAP_PRESETS = [
     { 
-      id: 'plain', name: '🌲 狹窄丘陵', desc: '丘陵地形起伏，有多處岩石限制擺放空間。', 
+      id: 'plain', name: '🌲 狹窄丘陵', desc: '丘陵地形起伏，有多處岩石（🪨可擋風加重量）。', 
       setup: (g) => { g[14] = { ...CARDS[0] }; g[0] = g[5] = g[7] = g[12] = g[23] = g[30] = g[35] = { type: 'obstacle', icon: '🪨' }; } 
     },
     { 
-      id: 'mountain', name: '⛰️ 險峻山丘', desc: '大量巨石（🪨）封鎖道路，僅剩狹長可建區域！', 
+      id: 'mountain', name: '⛰️ 險峻山丘', desc: '巨石（🪨）封鎖道路，可建區域狹長但檔風力極強！', 
       setup: (g) => { g[14] = { ...CARDS[0] }; g[1] = g[3] = g[7] = g[8] = g[10] = g[19] = g[22] = g[28] = g[29] = g[34] = { type: 'obstacle', icon: '🪨' }; } 
     },
     { 
-      id: 'lake', name: '🏝️ 水鄉澤國', desc: '蜿蜒的水域（🌊）橫跨整個地圖，考驗臨水建築！', 
+      id: 'lake', name: '🏝️ 水鄉澤國', desc: '水域（🌊）橫跨地圖，擺放風車與溫泉發揮倍率！', 
       setup: (g) => { g[14] = { ...CARDS[0] }; g[2] = g[3] = g[8] = g[9] = g[15] = g[20] = g[21] = g[26] = g[27] = g[33] = { type: 'water', icon: '🌊' }; } 
     },
     { 
-      id: 'volcano', name: '🌋 焦土熔岩', desc: '多處火山裂隙（🌋），減少可建格子且威脅重量！', 
+      id: 'volcano', name: '🌋 焦土熔岩', desc: '火山裂隙（🌋）會威脅重量，但能誘發水晶爆發！', 
       setup: (g) => { g[14] = { ...CARDS[0] }; g[0] = g[4] = g[8] = g[11] = g[13] = g[22] = g[25] = g[27] = g[31] = { type: 'volcano', icon: '🌋' }; } 
     },
     { 
-      id: 'sakura', name: '🌸 密林櫻境', desc: '古老櫻花樹（🌸）盤踞各地，空間緊湊但加成極高！', 
+      id: 'sakura', name: '🌸 密林櫻境', desc: '櫻花樹（🌸）盤踞，鄰近放置任何建築均享大量加分！', 
       setup: (g) => { g[14] = { ...CARDS[0] }; g[1] = g[6] = g[10] = g[13] = g[18] = g[22] = g[25] = g[29] = g[32] = { type: 'sakura', icon: '🌸' }; } 
     }
   ];
@@ -268,7 +330,7 @@
     { name: "☀️ 晴空萬里", desc: "本回合所有建築放置額外 +5 分！", scoreBonus: 5, honeyBonus: 0, wind: '微風' },
     { name: "🐝 蜂群大豐收", desc: "小熊熊額外獲得 2 罐蜂蜜！", scoreBonus: 0, honeyBonus: 2, wind: '微風' },
     { name: "💨 強烈季風", desc: "風力偏大，需注意建築總重量！", scoreBonus: 0, honeyBonus: 0, wind: '強風' },
-    { name: "🌪️ 突發暴風", desc: "本回合極度危險！輕型設施有被吹走風險！", scoreBonus: 0, honeyBonus: 0, wind: '暴風' }
+    { name: "🌪️ 突發暴風", desc: "極度危險！無保護且重量 <10 的設施會被吹走！", scoreBonus: 0, honeyBonus: 0, wind: '暴風' }
   ];
 
   // 隱藏秘密任務庫
@@ -279,7 +341,7 @@
   ];
 
   let gameState = {
-    mode: 'coop', round: 1, maxRounds: 15, // 設為 15 回合（1-10顯分，11-15盲測）
+    mode: 'coop', round: 1, maxRounds: 15,
     p1Map: null, p2Map: null, honey: 4, p1Score: 0, p2Score: 0,
     currentEvent: null, p1Quest: null, p2Quest: null,
     p1SkillUsed: false, p2SkillUsed: false, p2StrengthenMode: false,
@@ -506,7 +568,6 @@
     const currentScore = gameState.mode === 'vs' ? gameState.p2Score : gameState.p1Score;
     const activeGrid = gameState.mode === 'vs' ? gameState.grids.p2 : gameState.grids.p1;
     
-    // 前 10 回合顯示分數，第 11 回合起顯示 🔒 隱藏
     if (gameState.round <= 10) {
       document.getElementById('p2-score').innerText = `✨ ${currentScore}`;
     } else {
@@ -561,14 +622,18 @@
     const adjIndices = getAdjacentIndices(index);
 
     if (adjIndices.some(i => activeGrid[i]?.type === 'water')) {
-      if (currentTile.id === 'windmill') { bonus *= 2; synergyMsg.push("水邊風車(得分x2)!"); }
-      if (currentTile.id === 'bath') { bonus += 15; synergyMsg.push("湖景溫泉(+15分)"); }
+      if (currentTile.id === 'windmill') { bonus *= 2; synergyMsg.push("水邊風車(分數x2)!"); }
+      if (currentTile.id === 'bath') { bonus += 15; synergyMsg.push("湖景溫泉(+15分)!"); }
     }
-    if (adjIndices.some(i => activeGrid[i]?.type === 'sakura')) { bonus += 15; synergyMsg.push("櫻花環繞(+15分)"); }
-    if (adjIndices.some(i => activeGrid[i]?.type === 'volcano') && (currentTile.id === 'crystal')) { bonus += 20; synergyMsg.push("火山共鳴(+20分)"); }
+    if (adjIndices.some(i => activeGrid[i]?.type === 'sakura')) { bonus += 15; synergyMsg.push("櫻花環繞(+15分)!"); }
+    if (adjIndices.some(i => activeGrid[i]?.type === 'volcano') && (currentTile.id === 'crystal')) { bonus += 20; synergyMsg.push("火山共鳴(+20分)!"); }
 
-    if (currentTile.id === 'tree' && adjIndices.some(i => activeGrid[i]?.id === 'house')) { bonus += 15; synergyMsg.push("樹木庇護房屋(+15分)"); }
-    if (currentTile.id === 'crystal') { bonus += new Set(adjIndices.map(i => activeGrid[i]?.id).filter(Boolean)).size * 10; }
+    if (currentTile.id === 'tree' && adjIndices.some(i => activeGrid[i]?.id === 'house')) { bonus += 15; synergyMsg.push("樹木庇護房屋(+15分)!"); }
+    if (currentTile.id === 'crystal') { 
+      const diffTypes = new Set(adjIndices.map(i => activeGrid[i]?.id).filter(Boolean)).size;
+      bonus += diffTypes * 10;
+      if (diffTypes > 0) synergyMsg.push(`水晶陣加成(+${diffTypes*10}分)!`);
+    }
 
     if (gameState.mode === 'vs') gameState.p2Score += bonus;
     else gameState.p1Score += bonus;
@@ -622,7 +687,6 @@
 
     gameState.round++;
     
-    // 如果剛好進入第 11 回合，提醒玩家開始進入盲測模式
     let transNotice = "規劃最新卡牌配置！";
     if (gameState.round === 11) {
       transNotice = "⚠️ 注意：從本回合（第 11 回合）起，分數將完全隱藏進入盲測模式！";
@@ -667,13 +731,13 @@
       }
 
       document.getElementById('rank-display').innerText = rank;
-      document.getElementById('end-msg').innerText = "微笑熊熊王國重建完成！";
+      document.getElementById('end-msg').innerText = "笑笑熊國重建成功！";
       document.getElementById('dynamic-comment').innerHTML = comment;
 
       statsContainer.innerHTML = `
         <h3>🤝 合作模式戰果</h3>
         <p style="margin-top:6px;">挑戰地形：<b>${gameState.p1Map.name}</b></p>
-        <p>最終微笑積分：<b>✨ ${finalScore} 分</b></p>
+        <p>最終笑笑積分：<b>✨ ${finalScore} 分</b></p>
         <p>最終防風總重：<b>⚓ ${p1W}</b></p>
         <p>秘密任務：<b>${p1QuestDone ? '✅ 已完成 (+'+gameState.p1Quest.bonus+'分)' : '❌ 未完成'}</b></p>
       `;
