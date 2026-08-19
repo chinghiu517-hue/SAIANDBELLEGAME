@@ -98,18 +98,19 @@
     </div>
   </div>
 
-  <!-- 說明彈窗 -->
+  <!-- 修改點 1：簡化規則說明，只包含遊戲玩法，不說明卡牌用法 -->
   <div id="help-modal" class="modal-overlay">
     <div class="modal-content">
-      <h2>⚔️ 笑笑熊國：規則說明</h2>
-      <ul style="padding-left:16px; font-size:0.75rem; line-height:1.5;">
-        <li><b>固定蜜糖</b>：每局基礎補充固定為 <b>5 蜜糖</b>！</li>
-        <li><b>購買與存卡</b>：需支付對應蜜糖購買卡牌才能儲存至庫存區，存卡動作亦<b>支援 Redo 復原</b>！</li>
-        <li><b>5張卡牌與刷新</b>：每局提供 5 張卡，可用 <b>1 蜜糖</b> 洗牌重抽。</li>
-        <li><b>地盤領先獎勵</b>：佔據地圖最多格子的領先者，下局額外獲得 <b>+1 蜜糖</b>！</li>
-        <li><b>特別卡</b>：包含零用錢 (🪙 額外蜜糖)、炸彈 (💣 破壞)、聚會 (🎉 封印對方放置)、天氣師 (🌤️ 天氣掌控)。</li>
+      <h2>⚔️ 笑笑熊國：玩法說明</h2>
+      <ul style="padding-left:16px; font-size:0.78rem; line-height:1.6; margin: 8px 0;">
+        <li><b>遊戲目標</b>：共進行 <b>10 局回合</b>，雙方輪流選擇卡牌放置於 7x7 地圖上，最終累計總分最高者勝出！</li>
+        <li><b>固定蜜糖</b>：每局開始時，基礎補充固定為 <b>5 個蜜糖</b>。</li>
+        <li><b>抽牌與重洗</b>：每局隨機獲得 <b>5 張卡牌</b>；若對手牌不滿意，可花費 <b>1 蜜糖</b> 重新洗牌。</li>
+        <li><b>購買與存卡</b>：購買卡牌時需支付對應的蜜糖。卡牌可選擇直接使用，或購買後<b>存入庫存區</b>（最多 4 張）留待後續回合使用。</li>
+        <li><b>領地領先獎勵</b>：地圖上佔據最多格子的玩家（或並列領先者），下一局可額外獲得 <b>+1 蜜糖</b>。</li>
+        <li><b>操作復原</b>：本局內的操作（包含放置、購買存卡、洗牌等）皆可以點擊 <b>Redo</b> 按鈕進行復原。</li>
       </ul>
-      <button class="btn" style="width:100%; margin-top:8px;" onclick="toggleHelpModal(false)">開始遊戲！</button>
+      <button class="btn" style="width:100%; margin-top:8px;" onclick="toggleHelpModal(false)">我明白了！</button>
     </div>
   </div>
 
@@ -117,10 +118,10 @@
   <div id="start-screen" class="screen active">
     <div class="hero-icon">🐻⚔️🐷</div>
     <h1>笑笑熊國</h1>
-    <p>領地爭霸戰 (最新強化版)</p>
+    <p>領地爭霸戰</p>
     <div style="height: 10px;"></div>
     <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.1rem;" onclick="startGame()">⚔️ 開始爭霸</button>
-    <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 規則說明</button>
+    <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 玩法說明</button>
   </div>
 
   <!-- 換手畫面 -->
@@ -378,11 +379,6 @@
       
       cardEl.className = `card ${card.type.includes('special') ? 'special' : ''} ${isSelected ? 'selected' : ''}`;
       
-      // 計算天氣減免後的實際費用
-      const cost = sourceType === 'drawn' 
-        ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
-        : 0; // 已經購買存入庫存的卡，使用時費用為 0
-
       const originalCost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
 
       cardEl.innerHTML = `
@@ -399,11 +395,12 @@
     });
   }
 
-  /* 📥 修改點 1：需先扣除蜜糖費用才能存卡，並記錄 Redo 狀態 */
+  /* 修改點 2：修正存卡扣費問題，明確扣除玩家蜜糖，並支援 Redo 恢復 */
   function storeCard(e, index) {
     e.stopPropagation();
     const isP1 = gameState.activePlayer === 'p1';
     const storedList = isP1 ? gameState.p1Stored : gameState.p2Stored;
+    
     if (storedList.length >= 4) {
       alert("庫存區已滿（上限 4 張）！");
       return;
@@ -418,10 +415,10 @@
       return;
     }
 
-    // 修改點 2：保存歷史紀錄以支援 Redo 存卡
+    // 儲存目前狀態，方便 Redo 回退蜜糖與手牌
     saveHistoryState();
 
-    // 扣除費用並存卡
+    // 實質扣費與搬移卡牌
     deductHoney(cost);
     const removedCard = gameState.drawnCards.splice(index, 1)[0];
     storedList.push(removedCard);
@@ -463,8 +460,6 @@
   /* 🪙 使用零用錢卡 */
   function useAllowanceCard() {
     const isP1 = gameState.activePlayer === 'p1';
-    
-    // 從手牌直接用需要扣費用（零用錢卡費用為 0），庫存卡費用也是 0
     const card = gameState.selectedCard;
     const cost = gameState.selectedCardSource === 'drawn' 
       ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
@@ -498,7 +493,7 @@
     const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
     const card = gameState.selectedCard;
     
-    // 如果來自手牌需付費，如果已存入庫存區則免再付費
+    // 手牌需付費，庫存卡則已付費
     const cost = gameState.selectedCardSource === 'drawn' 
       ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
       : 0;
