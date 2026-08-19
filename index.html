@@ -23,7 +23,7 @@
     body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
     #app { width: 100%; max-width: 650px; height: 100vh; max-height: 920px; display: flex; flex-direction: column; position: relative; background: var(--bg-color); box-shadow: var(--shadow); overflow: hidden; }
 
-    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 12px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
+    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 10px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
     .screen.active { display: flex; z-index: 2; }
 
     h1 { font-size: 1.5rem; text-align: center; color: var(--text-main); margin-bottom: 4px; }
@@ -37,8 +37,8 @@
       transition: transform 0.1s; text-align: center; margin: 4px 0;
     }
     .btn:active { transform: scale(0.96); }
-    .btn-redo { background: #ff9800; color: white; padding: 4px 10px; font-size: 0.75rem; border-radius: 8px; border:none; cursor:pointer; }
-    .btn-action { font-size: 0.65rem; padding: 3px 6px; border-radius: 6px; border: none; cursor: pointer; margin-top: 2px; }
+    .btn-redo { background: #ff9800; color: white; padding: 4px 8px; font-size: 0.72rem; border-radius: 8px; border:none; cursor:pointer; }
+    .btn-action { font-size: 0.65rem; padding: 3px 5px; border-radius: 6px; border: none; cursor: pointer; margin-top: 2px; }
 
     #start-screen { justify-content: center; align-items: center; gap: 12px; }
     .hero-icon { font-size: 3.5rem; }
@@ -46,33 +46,33 @@
     #transition-screen { justify-content: center; align-items: center; text-align: center; background: rgba(255, 250, 240, 0.98); z-index: 10; }
     .avatar-large { font-size: 4rem; margin: 10px 0; }
 
-    .game-header { background: var(--panel-bg); padding: 8px 12px; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .game-header { background: var(--panel-bg); padding: 6px 10px; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
     .stat-label { font-size: 0.65rem; color: var(--text-muted); }
     .stat-value { font-size: 0.85rem; font-weight: bold; }
 
-    .event-banner { background: #fff3cd; border: 1px solid #ffeba2; color: #856404; padding: 5px 8px; border-radius: 8px; font-size: 0.72rem; margin-bottom: 6px; text-align: center; }
+    .event-banner { background: #fff3cd; border: 1px solid #ffeba2; color: #856404; padding: 4px 8px; border-radius: 8px; font-size: 0.7rem; margin-bottom: 4px; text-align: center; }
 
-    .card-hand { display: flex; gap: 4px; overflow-x: auto; padding: 4px 0; margin-bottom: 4px; }
+    .card-hand { display: flex; gap: 4px; overflow-x: auto; padding: 2px 0; margin-bottom: 4px; }
     .card {
       background: var(--panel-bg); border: 2px solid #e2dcd5; border-radius: 8px;
-      padding: 4px; min-width: 90px; width: 90px; display: flex; flex-direction: column; align-items: center;
-      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; height: 125px; flex-shrink: 0;
+      padding: 4px; min-width: 82px; width: 82px; display: flex; flex-direction: column; align-items: center;
+      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; height: 120px; flex-shrink: 0;
     }
     .card.selected { border-color: #ff9800; background-color: #fff8e1; transform: translateY(-2px); }
     .card.special { border-color: #9c27b0; background: #f3e5f5; }
-    .card-icon { font-size: 1.3rem; }
-    .card-title { font-size: 0.7rem; font-weight: bold; text-align: center; }
-    .card-desc { font-size: 0.58rem; color: var(--text-muted); text-align: center; line-height: 1.1; }
+    .card-icon { font-size: 1.2rem; }
+    .card-title { font-size: 0.68rem; font-weight: bold; text-align: center; }
+    .card-desc { font-size: 0.55rem; color: var(--text-muted); text-align: center; line-height: 1.1; }
 
-    .grid-container { display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 3px; background: var(--panel-bg); padding: 5px; border-radius: var(--border-radius); box-shadow: var(--shadow); aspect-ratio: 1; width: 100%; margin: 4px 0; }
+    .grid-container { display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 3px; background: var(--panel-bg); padding: 4px; border-radius: var(--border-radius); box-shadow: var(--shadow); aspect-ratio: 1; width: 100%; margin: 2px 0; }
     .grid-cell { background: #f3efe6; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; cursor: pointer; position: relative; transition: background 0.2s; }
     .grid-cell.p1-owner { background: #ffe0e6; border: 1.5px solid var(--p1-dark); }
     .grid-cell.p2-owner { background: #e1f5fe; border: 1.5px solid var(--p2-dark); }
     .grid-cell.obstacle { background: #dcd6cd; cursor: not-allowed; }
     .grid-cell.water { background: #b2ebf2; cursor: not-allowed; }
 
-    .log-box { background: rgba(255,255,255,0.85); border-radius: 8px; padding: 5px; font-size: 0.72rem; height: 38px; overflow-y: auto; border-left: 4px solid var(--accent-honey); }
+    .log-box { background: rgba(255,255,255,0.85); border-radius: 8px; padding: 4px; font-size: 0.7rem; height: 35px; overflow-y: auto; border-left: 4px solid var(--accent-honey); }
 
     .detail-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.72rem; }
     .detail-table th, .detail-table td { border: 1px solid #eee; padding: 4px; text-align: center; }
@@ -89,7 +89,7 @@
 <body>
 
 <div id="app">
-  <!-- 天氣師指定天氣彈窗 -->
+  <!-- 天氣師彈窗 -->
   <div id="weather-modal" class="modal-overlay">
     <div class="modal-content">
       <h2>🌤️ 天氣師：控制下一局天氣</h2>
@@ -101,17 +101,17 @@
   <!-- 說明彈窗 -->
   <div id="help-modal" class="modal-overlay">
     <div class="modal-content">
-      <h2>⚔️ 笑笑熊國：獨立對戰規則</h2>
-      <ul style="padding-left:16px; font-size:0.78rem; line-height:1.5;">
-        <li><b>獨立對戰</b>：玩家各自獨立抽卡、存卡與在大地圖上選擇位置擺放建築！</li>
-        <li><b>共用大地圖</b>：兩人在同張 7x7 地圖上競爭，誰放建築該格就歸誰！</li>
-        <li><b>3 大特別功能卡牌</b>：
-          <br>💣 <b>炸彈卡</b>：直接炸毀地圖上任意設施。
-          <br>🎉 <b>笑笑熊聚會</b>：限制對方下一局只能存卡、不能放卡！
-          <br>🌤️ <b>天氣師</b>：自由挑選與控制下一局的天氣。
+      <h2>⚔️ 笑笑熊國：規則說明</h2>
+      <ul style="padding-left:16px; font-size:0.75rem; line-height:1.5;">
+        <li><b>固定蜜糖</b>：每局基礎補充固定為 <b>5 蜜糖</b>！</li>
+        <li><b>5張卡牌與刷新</b>：每局提供 5 張卡，可用 <b>1 蜜糖</b> 洗牌重抽。</li>
+        <li><b>領地領先獎勵</b>：佔據地圖最多格子的領先者，下局額外獲得 <b>+1 蜜糖</b>！</li>
+        <li><b>4 大特別卡</b>：
+          <br>🪙 <b>零用錢</b>（免費）：下局額外獲得 5 個蜜糖。
+          <br>💣 <b>炸彈卡</b>：炸毀地圖上的任意設施。
+          <br>🎉 <b>笑笑熊聚會</b>：讓對手下一局無法放置卡牌。
+          <br>🌤️ <b>天氣師</b>：掌控下一局的天氣狀況。
         </li>
-        <li><b>10 局制與全滿完結</b>：共 10 局（8-10 局盲測）。若地圖全滿遊戲立即結算！</li>
-        <li><b>詳細數據</b>：遊戲結束時詳細列出雙方建築數量與各項得分。</li>
       </ul>
       <button class="btn" style="width:100%; margin-top:8px;" onclick="toggleHelpModal(false)">開始遊戲！</button>
     </div>
@@ -121,13 +121,13 @@
   <div id="start-screen" class="screen active">
     <div class="hero-icon">🐻⚔️🐷</div>
     <h1>笑笑熊國</h1>
-    <p>獨立爭霸戰 (Territory Clash)</p>
+    <p>領地爭霸戰 (最新強化版)</p>
     <div style="height: 10px;"></div>
-    <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.1rem;" onclick="startGame()">⚔️ 開始獨立爭霸</button>
-    <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 規則與說明</button>
+    <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.1rem;" onclick="startGame()">⚔️ 開始爭霸</button>
+    <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 規則說明</button>
   </div>
 
-  <!-- 換手交接畫面 -->
+  <!-- 換手畫面 -->
   <div id="transition-screen" class="screen">
     <h2 id="trans-title">請交接裝置</h2>
     <div id="trans-avatar" class="avatar-large">🐻</div>
@@ -136,11 +136,11 @@
     <button id="trans-btn" class="btn" onclick="completeTransition()">準備好了！</button>
   </div>
 
-  <!-- 玩家獨立遊戲主畫面 (共用) -->
+  <!-- 主遊戲畫面 -->
   <div id="game-screen" class="screen">
     <div class="game-header">
       <div class="stat-box"><span class="stat-label">局數</span><span id="ui-round" class="stat-value">1/10</span></div>
-      <div class="stat-box"><span class="stat-label">蜂蜜</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
+      <div class="stat-box"><span class="stat-label">蜜糖</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
       <div class="stat-box"><span class="stat-label">🐻 熊熊分</span><span id="ui-p1-score" class="stat-value">✨ 0</span></div>
       <div class="stat-box"><span class="stat-label">🐷 豬豬分</span><span id="ui-p2-score" class="stat-value">✨ 0</span></div>
       <button class="btn-redo" id="redo-btn" onclick="redoAction()">↩️ Redo</button>
@@ -148,21 +148,21 @@
 
     <div id="ui-event-banner" class="event-banner">📢 天氣預報：載入中...</div>
 
-    <!-- 7x7 共用大地圖 -->
+    <!-- 7x7 地圖 -->
     <div class="grid-container" id="grid-container"></div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-      <b style="font-size:0.75rem;">🎲 抽到的卡牌：</b>
-      <span style="font-size:0.65rem; color:var(--text-muted);" id="ui-status-hint">點選卡牌使用或儲存</span>
+      <b style="font-size:0.75rem;">🎲 抽到的卡牌 (5張)：</b>
+      <button class="btn-action" style="background:#ff9800; color:#fff;" onclick="refreshHand()">🔄 洗牌 (1🍯)</button>
     </div>
     <div class="card-hand" id="drawn-hand"></div>
 
     <b style="font-size:0.75rem;">📥 庫存積累卡牌 (上限4張)：</b>
-    <div class="card-hand" id="stored-hand" style="min-height: 125px; background: #f5efe6; border-radius: 8px; padding:2px;"></div>
+    <div class="card-hand" id="stored-hand" style="min-height: 120px; background: #f5efe6; border-radius: 8px; padding:2px;"></div>
 
     <div class="log-box" id="ui-log">請選擇卡牌放置於地圖上，或進行儲蓄。</div>
     <div style="flex:1"></div>
-    <button class="btn" id="end-turn-btn" style="width:100%; margin-top:4px;" onclick="finishTurn()">結束本局回合 ➔</button>
+    <button class="btn" id="end-turn-btn" style="width:100%; margin-top:2px;" onclick="finishTurn()">結束本局回合 ➔</button>
   </div>
 
   <!-- 結算畫面 -->
@@ -179,7 +179,7 @@
 </div>
 
 <script>
-  // 基礎設施與特別卡牌
+  // 基礎設施與 4 大特別卡牌
   const CARDS = [
     { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 10, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
     { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 15, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
@@ -189,6 +189,7 @@
     { id: 'balloon', name: '觀光熱氣球', icon: '🎈', cost: 4, weight: -10, points: 40, desc: '極高分數，但重量負數！', type: 'build' },
     
     // 特別卡牌
+    { id: 'allowance', name: '零用錢', icon: '🪙', cost: 0, weight: 0, points: 0, desc: '【免費特別卡】下一局可額外獲得 5 個蜜糖！', type: 'special_allowance' },
     { id: 'bomb', name: '炸彈卡', icon: '💣', cost: 2, weight: 0, points: 0, desc: '【特別卡】直接炸毀地圖上任意設施！', type: 'special_bomb' },
     { id: 'party', name: '笑笑熊聚會', icon: '🎉', cost: 3, weight: 0, points: 0, desc: '【特別卡】指定對方下一局只能儲卡，不能放卡！', type: 'special_party' },
     { id: 'weather', name: '天氣師', icon: '🌤️', cost: 2, weight: 0, points: 0, desc: '【特別卡】自由控制下一局的全場天氣！', type: 'special_weather' }
@@ -205,17 +206,15 @@
 
   let gameState = {
     round: 1, maxRounds: 10,
-    activePlayer: 'p1', // 'p1' (熊熊) 或 'p2' (豬豬)
+    activePlayer: 'p1',
     p1Honey: 5, p2Honey: 5,
     p1Score: 0, p2Score: 0,
     p1Stored: [], p2Stored: [],
+    p1BonusHoneyNext: 0, p2BonusHoneyNext: 0, // 零用錢卡獎勵
     drawnCards: [],
-    selectedCard: null,
-    selectedCardSource: null, // 'drawn' 或 'stored'
-    selectedCardIndex: -1,
-    currentWeather: null,
-    forcedNextWeather: null, // 天氣師指定的天氣
-    p1PartyLocked: false, p2PartyLocked: false, // 笑笑熊聚會禁放狀態
+    selectedCard: null, selectedCardSource: null, selectedCardIndex: -1,
+    currentWeather: null, forcedNextWeather: null,
+    p1PartyLocked: false, p2PartyLocked: false,
     grid: Array(49).fill(null),
     historyStack: [],
     p1BuildStats: {}, p2BuildStats: {}
@@ -230,19 +229,19 @@
     gameState.p1Honey = 5; gameState.p2Honey = 5;
     gameState.p1Score = 0; gameState.p2Score = 0;
     gameState.p1Stored = []; gameState.p2Stored = [];
+    gameState.p1BonusHoneyNext = 0; gameState.p2BonusHoneyNext = 0;
     gameState.grid = Array(49).fill(null);
     gameState.p1BuildStats = {}; gameState.p2BuildStats = {};
     gameState.forcedNextWeather = null;
     gameState.p1PartyLocked = false; gameState.p2PartyLocked = false;
 
-    // 地圖障礙物與水域
     const obstacles = [3, 10, 16, 24, 32, 38, 45];
     const waters = [11, 12, 17, 31, 36, 37];
     obstacles.forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
     waters.forEach(i => gameState.grid[i] = { type: 'water', icon: '🌊' });
 
     switchScreen('transition-screen');
-    setupTransition("笑笑熊國獨立對戰！", "🐻", "小笑笑熊 (P1) 的回合！準備進行抽牌與放置。", "btn", () => startTurn());
+    setupTransition("笑笑熊國領地爭霸！", "🐻", "小笑笑熊 (P1) 的回合！", "btn", () => startTurn());
   }
 
   function switchScreen(screenId) {
@@ -262,13 +261,13 @@
 
   function completeTransition() { if (nextTransitionCallback) nextTransitionCallback(); }
 
-  /* --- 回合初始化 (獨立玩法) --- */
+  /* --- 回合初始化 --- */
   function startTurn() {
     switchScreen('game-screen');
     gameState.selectedCard = null;
     gameState.historyStack = [];
 
-    // 確定天氣
+    // 天氣設置
     if (gameState.forcedNextWeather) {
       gameState.currentWeather = gameState.forcedNextWeather;
       gameState.forcedNextWeather = null;
@@ -276,27 +275,67 @@
       gameState.currentWeather = WEATHER_LIST[Math.floor(Math.random() * WEATHER_LIST.length)];
     }
 
-    // 發牌與積累蜂蜜
     const isP1 = gameState.activePlayer === 'p1';
-    let extraHoney = 0;
-    gameState.grid.forEach(c => { if(c && c.id === 'windmill' && c.owner === gameState.activePlayer) extraHoney++; });
-    
-    if (isP1) gameState.p1Honey += (3 + extraHoney);
-    else gameState.p2Honey += (3 + extraHoney);
 
-    // 抽 3 張牌
+    // 計算地盤領先獎勵
+    let p1Territory = 0, p2Territory = 0;
+    gameState.grid.forEach(c => {
+      if (c && c.owner === 'p1') p1Territory++;
+      if (c && c.owner === 'p2') p2Territory++;
+    });
+
+    let territoryBonus = 0;
+    if (isP1 && p1Territory >= p2Territory && p1Territory > 0) territoryBonus = 1;
+    if (!isP1 && p2Territory >= p1Territory && p2Territory > 0) territoryBonus = 1;
+
+    // 風車設施加成
+    let windmillBonus = 0;
+    gameState.grid.forEach(c => { if(c && c.id === 'windmill' && c.owner === gameState.activePlayer) windmillBonus++; });
+
+    // 零用錢獎勵
+    let bonusHoney = isP1 ? gameState.p1BonusHoneyNext : gameState.p2BonusHoneyNext;
+    if (isP1) gameState.p1BonusHoneyNext = 0; else gameState.p2BonusHoneyNext = 0;
+
+    // 每局固定 5 個蜜糖 + 額外獎勵
+    const totalHoney = 5 + territoryBonus + windmillBonus + bonusHoney;
+
+    if (isP1) gameState.p1Honey = totalHoney;
+    else gameState.p2Honey = totalHoney;
+
+    // 抽 5 張卡牌
+    drawFiveCards();
+
+    updateUI();
+  }
+
+  function drawFiveCards() {
     gameState.drawnCards = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       gameState.drawnCards.push(CARDS[Math.floor(Math.random() * CARDS.length)]);
     }
+  }
 
+  /* 用 1 蜜糖重新洗牌 */
+  function refreshHand() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
+
+    if (currentHoney < 1) {
+      alert("蜜糖不足 1 個，無法重新洗牌！");
+      return;
+    }
+
+    saveHistoryState();
+    deductHoney(1);
+    drawFiveCards();
+    gameState.selectedCard = null;
+    document.getElementById('ui-log').innerText = "🔄 已花費 1 蜜糖重新洗牌！";
     updateUI();
   }
 
   function updateUI() {
     const isP1 = gameState.activePlayer === 'p1';
     
-    // 按鈕與玩家色彩調配
     const endBtn = document.getElementById('end-turn-btn');
     endBtn.style.background = isP1 ? 'linear-gradient(135deg, #ffb3ba, #f092a9)' : 'linear-gradient(135deg, #bae1ff, #58c4b1)';
 
@@ -311,7 +350,6 @@
       document.getElementById('ui-p2-score').innerText = `🔒 隱藏`;
     }
 
-    // 聚會鎖定提示
     const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
     document.getElementById('ui-event-banner').innerText = `📢 天氣：${gameState.currentWeather.name}（${gameState.currentWeather.desc}）${isLocked ? ' | 🎉 受到聚會影響：本局無法放置建築！' : ''}`;
 
@@ -392,8 +430,10 @@
       gameState.selectedCardSource = sourceType;
       gameState.selectedCardIndex = index;
 
-      // 立即處理不需點擊地圖的特別卡
-      if (gameState.selectedCard.id === 'party') {
+      if (gameState.selectedCard.id === 'allowance') {
+        useAllowanceCard();
+        return;
+      } else if (gameState.selectedCard.id === 'party') {
         usePartyCard();
         return;
       } else if (gameState.selectedCard.id === 'weather') {
@@ -404,7 +444,20 @@
     updateUI();
   }
 
-  /* --- 點擊地圖：放置建築或使用炸彈卡 --- */
+  /* 🪙 使用零用錢卡 */
+  function useAllowanceCard() {
+    const isP1 = gameState.activePlayer === 'p1';
+    saveHistoryState();
+    
+    if (isP1) gameState.p1BonusHoneyNext += 5;
+    else gameState.p2BonusHoneyNext += 5;
+
+    consumeSelectedCard();
+    alert("🪙 獲得零用錢！下一局將會額外獲得 5 個蜜糖！");
+    updateUI();
+  }
+
+  /* 💣 放置與炸彈卡處理 */
   function handleCellClick(index) {
     if (!gameState.selectedCard) {
       document.getElementById('ui-log').innerText = "請先從手牌選擇一張要放置或使用的卡牌！";
@@ -418,13 +471,12 @@
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
-      alert("蜂蜜不足，無法使用此卡牌！");
+      alert("蜜糖不足，無法使用此卡牌！");
       return;
     }
 
     const targetCell = gameState.grid[index];
 
-    // 💣 炸彈卡處理
     if (card.id === 'bomb') {
       if (!targetCell || !targetCell.owner) {
         alert("炸彈卡必須選擇地圖上已放置的設施進行炸毀！");
@@ -433,7 +485,7 @@
       saveHistoryState();
       deductHoney(cost);
       
-      gameState.grid[index] = null; // 炸毀設施
+      gameState.grid[index] = null;
       consumeSelectedCard();
 
       document.getElementById('ui-log').innerText = `💥 炸彈卡發揮威力！成功炸毀了格子上的設施！`;
@@ -441,7 +493,6 @@
       return;
     }
 
-    // 放置普通建築/設施
     if (isLocked) {
       alert("🎉 你受到笑笑熊聚會影響，本局無法在格子上放置建築！");
       return;
@@ -479,7 +530,6 @@
     if (checkBoardFull()) setTimeout(() => endGame(true), 300);
   }
 
-  /* 🎉 使用笑笑熊聚會卡 */
   function usePartyCard() {
     const isP1 = gameState.activePlayer === 'p1';
     const card = gameState.selectedCard;
@@ -487,7 +537,7 @@
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
-      alert("蜂蜜不足，無法使用笑笑熊聚會卡！");
+      alert("蜜糖不足，無法使用笑笑熊聚會卡！");
       return;
     }
 
@@ -504,7 +554,6 @@
     }
   }
 
-  /* 🌤️ 使用天氣師卡 */
   function useWeatherCard() {
     const isP1 = gameState.activePlayer === 'p1';
     const card = gameState.selectedCard;
@@ -512,7 +561,7 @@
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
-      alert("蜂蜜不足，無法使用天氣師卡！");
+      alert("蜜糖不足，無法使用天氣師卡！");
       return;
     }
 
@@ -571,6 +620,8 @@
       p1Honey: gameState.p1Honey, p2Honey: gameState.p2Honey,
       p1Stored: JSON.parse(JSON.stringify(gameState.p1Stored)),
       p2Stored: JSON.parse(JSON.stringify(gameState.p2Stored)),
+      p1BonusHoneyNext: gameState.p1BonusHoneyNext,
+      p2BonusHoneyNext: gameState.p2BonusHoneyNext,
       drawnCards: JSON.parse(JSON.stringify(gameState.drawnCards)),
       p1Stats: JSON.parse(JSON.stringify(gameState.p1BuildStats)),
       p2Stats: JSON.parse(JSON.stringify(gameState.p2BuildStats))
@@ -584,6 +635,7 @@
     gameState.p1Score = lastState.p1Score; gameState.p2Score = lastState.p2Score;
     gameState.p1Honey = lastState.p1Honey; gameState.p2Honey = lastState.p2Honey;
     gameState.p1Stored = lastState.p1Stored; gameState.p2Stored = lastState.p2Stored;
+    gameState.p1BonusHoneyNext = lastState.p1BonusHoneyNext; gameState.p2BonusHoneyNext = lastState.p2BonusHoneyNext;
     gameState.drawnCards = lastState.drawnCards;
     gameState.p1BuildStats = lastState.p1Stats; gameState.p2BuildStats = lastState.p2Stats;
     gameState.selectedCard = null;
@@ -606,14 +658,13 @@
   function finishTurn() {
     if (checkBoardFull()) { endGame(true); return; }
 
-    // 重置聚會鎖定狀態（若本回合已過）
     if (gameState.activePlayer === 'p1') gameState.p1PartyLocked = false;
     else gameState.p2PartyLocked = false;
 
     if (gameState.activePlayer === 'p1') {
       gameState.activePlayer = 'p2';
       switchScreen('transition-screen');
-      setupTransition(`第 ${gameState.round} 局 - 交給毛巾豬`, "🐷", "毛巾豬 (P2) 回合，準備進行獨立擺放與爭搶地盤！", "btn", () => startTurn());
+      setupTransition(`第 ${gameState.round} 局 - 交給毛巾豬`, "🐷", "毛巾豬 (P2) 回合，準備進行獨立擺奪領地！", "btn", () => startTurn());
     } else {
       if (gameState.round >= gameState.maxRounds) { endGame(false); return; }
       gameState.round++;
@@ -623,7 +674,7 @@
     }
   }
 
-  /* --- 終局數據揭曉 --- */
+  /* --- 終局揭曉 --- */
   function endGame(isFullBoard = false) {
     switchScreen('end-screen');
 
