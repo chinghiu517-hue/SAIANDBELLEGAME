@@ -71,6 +71,7 @@
     .grid-cell.p2-owner { background: #e1f5fe; border: 1.5px solid var(--p2-dark); }
     .grid-cell.obstacle { background: #dcd6cd; cursor: not-allowed; }
     .grid-cell.water { background: #b2ebf2; cursor: not-allowed; }
+    .grid-cell.blocked { background: #ffe0b2; border: 1.5px dashed #f57c00; cursor: not-allowed; }
 
     .log-box { background: rgba(255,255,255,0.85); border-radius: 8px; padding: 4px; font-size: 0.7rem; height: 35px; overflow-y: auto; border-left: 4px solid var(--accent-honey); }
 
@@ -117,8 +118,8 @@
         <li><b>固定蜜糖</b>：每局開始時，基礎補充固定為 <b>5 個蜜糖</b>。</li>
         <li><b>抽牌與重洗</b>：每局隨機獲得 <b>5 張卡牌</b>；若對手牌不滿意，可花費 <b>1 蜜糖</b> 重新洗牌。</li>
         <li><b>購買與存卡</b>：購買卡牌時需支付對應的蜜糖。卡牌可選擇直接使用，或購買後<b>存入庫存區</b>（最多 4 張）留待後續回合使用。</li>
+        <li><b>大型建築</b>：如「毛巾局」需一次佔用 2 個相鄰空格。</li>
         <li><b>領地領先獎勵</b>：地圖上佔據最多格子的玩家（或並列領先者），下一局可額外獲得 <b>+1 蜜糖</b>。</li>
-        <li><b>操作復原</b>：本局內的操作（包含放置、購買存卡、洗牌等）皆可以點擊 <b>Redo</b> 按鈕進行復原。</li>
       </ul>
       <button class="btn" style="width:100%; margin-top:8px;" onclick="toggleHelpModal(false)">我明白了！</button>
     </div>
@@ -148,7 +149,6 @@
     <div class="game-header">
       <div class="stat-box"><span class="stat-label">局數</span><span id="ui-round" class="stat-value">1/10</span></div>
       <div class="stat-box"><span class="stat-label">蜜糖</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
-      <!-- 修改點 1 & 2：角色名稱為 小熊熊，分數顯示為 毛豬分 -->
       <div class="stat-box"><span class="stat-label" id="label-p1-score">🐻 熊熊分</span><span id="ui-p1-score" class="stat-value">✨ 0</span></div>
       <div class="stat-box"><span class="stat-label" id="label-p2-score">🐷 毛豬分</span><span id="ui-p2-score" class="stat-value">✨ 0</span></div>
       <button class="btn-redo" id="redo-btn" onclick="redoAction()">↩️ Redo</button>
@@ -161,7 +161,7 @@
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
       <b style="font-size:0.75rem;">🎲 抽到的卡牌 (5張)：</b>
-      <button class="btn-action" style="background:#ff9800; color:#fff;" onclick="refreshHand()">🔄 洗牌 (1🍯)</button>
+      <button class="btn-action" id="refresh-btn" style="background:#ff9800; color:#fff;" onclick="refreshHand()">🔄 洗牌 (1🍯)</button>
     </div>
     <div class="card-hand" id="drawn-hand"></div>
 
@@ -187,22 +187,31 @@
 </div>
 
 <script>
-  // 讀取/初始化玩家持久化名字
   let p1Name = localStorage.getItem('p1Name') || '小熊熊';
   let p2Name = localStorage.getItem('p2Name') || '毛巾豬';
 
+  // 卡牌庫定義（weight 控制出現權重）
   const CARDS = [
-    { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 10, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
-    { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 15, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
-    { id: 'bath', name: '蜂蜜溫泉', icon: '♨️', cost: 3, weight: 5, points: 25, desc: '高分設施，臨水額外+15分。', type: 'build' },
-    { id: 'brick', name: '鐵壁磚牆', icon: '🧱', cost: 2, weight: 30, points: 5, desc: '超強防風，極難被吹走。', type: 'build' },
-    { id: 'windmill', name: '風車發電機', icon: '🌪️', cost: 2, weight: 8, points: 15, desc: '每局額外+1蜂蜜。', type: 'build' },
-    { id: 'balloon', name: '觀光熱氣球', icon: '🎈', cost: 4, weight: -10, points: 40, desc: '極高分數，但重量負數！', type: 'build' },
+    { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 15, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
+    { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 12, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
+    { id: 'bath', name: '蜂蜜溫泉', icon: '♨️', cost: 3, weight: 10, points: 25, desc: '高分設施，臨水額外+15分。', type: 'build' },
+    { id: 'brick', name: '鐵壁磚牆', icon: '🧱', cost: 2, weight: 12, points: 5, desc: '超強防風，極難被吹走。', type: 'build' },
+    { id: 'windmill', name: '風車發電機', icon: '🌪️', cost: 2, weight: 10, points: 15, desc: '每局額外+1蜂蜜。', type: 'build' },
+    { id: 'balloon', name: '觀光熱氣球', icon: '🎈', cost: 4, weight: 8, points: 40, desc: '極高分數，但重量負數！', type: 'build' },
     
-    { id: 'allowance', name: '零用錢', icon: '🪙', cost: 0, weight: 0, points: 0, desc: '【免費特別卡】下一局可額外獲得 5 個蜜糖！', type: 'special_allowance' },
-    { id: 'bomb', name: '炸彈卡', icon: '💣', cost: 2, weight: 0, points: 0, desc: '【特別卡】直接炸毀地圖上任意設施！', type: 'special_bomb' },
-    { id: 'party', name: '笑笑熊聚會', icon: '🎉', cost: 3, weight: 0, points: 0, desc: '【特別卡】指定對方下一局只能儲卡，不能放卡！', type: 'special_party' },
-    { id: 'weather', name: '天氣師', icon: '🌤️', cost: 2, weight: 0, points: 0, desc: '【特別卡】自由控制下一局的全場天氣！', type: 'special_weather' }
+    // 【新建築】毛巾局：需使用 2 個格子
+    { id: 'towel_office', name: '毛巾局', icon: '🏢', cost: 4, weight: 8, points: 50, desc: '吸引笑笑熊回國！大幅加分，但需佔用相鄰 2 格！', type: 'build_large', size: 2 },
+
+    // 【低機率】零用錢
+    { id: 'allowance', name: '零用錢', icon: '🪙', cost: 0, weight: 3, points: 0, desc: '【低機率特別卡】下一局可額外獲得 5 個蜜糖！', type: 'special_allowance' },
+    
+    // 【新特別卡】任性一下 & 朋友探訪
+    { id: 'caprice', name: '任性一下', icon: '😤', cost: 0, weight: 8, points: 0, desc: '【特別卡】下一回合可以免費洗牌一次！', type: 'special_caprice' },
+    { id: 'visit', name: '朋友探訪', icon: '👋', cost: 1, weight: 8, points: 0, desc: '【特別卡】封鎖地圖 1 格，令對方下一回合不能在該格放置物品！', type: 'special_visit' },
+    
+    { id: 'bomb', name: '炸彈卡', icon: '💣', cost: 2, weight: 6, points: 0, desc: '【特別卡】直接炸毀地圖上任意設施！', type: 'special_bomb' },
+    { id: 'party', name: '笑笑熊聚會', icon: '🎉', cost: 3, weight: 5, points: 0, desc: '【特別卡】指定對方下一局只能儲卡，不能放卡！', type: 'special_party' },
+    { id: 'weather', name: '天氣師', icon: '🌤️', cost: 2, weight: 5, points: 0, desc: '【特別卡】自由控制下一局的全場天氣！', type: 'special_weather' }
   ];
 
   const WEATHER_LIST = [
@@ -221,6 +230,7 @@
     p1Score: 0, p2Score: 0,
     p1Stored: [], p2Stored: [],
     p1BonusHoneyNext: 0, p2BonusHoneyNext: 0,
+    p1FreeRefreshNext: false, p2FreeRefreshNext: false,
     drawnCards: [],
     selectedCard: null, selectedCardSource: null, selectedCardIndex: -1,
     currentWeather: null, forcedNextWeather: null,
@@ -240,6 +250,7 @@
     gameState.p1Score = 0; gameState.p2Score = 0;
     gameState.p1Stored = []; gameState.p2Stored = [];
     gameState.p1BonusHoneyNext = 0; gameState.p2BonusHoneyNext = 0;
+    gameState.p1FreeRefreshNext = false; gameState.p2FreeRefreshNext = false;
     gameState.grid = Array(49).fill(null);
     gameState.p1BuildStats = {}; gameState.p2BuildStats = {};
     gameState.forcedNextWeather = null;
@@ -277,6 +288,13 @@
     gameState.selectedCard = null;
     gameState.historyStack = [];
 
+    // 清理上一回合的「朋友探訪」暫時封鎖狀態
+    gameState.grid.forEach((cell, i) => {
+      if (cell && cell.type === 'blocked' && cell.blockedFor === gameState.activePlayer) {
+        gameState.grid[i] = null;
+      }
+    });
+
     if (gameState.forcedNextWeather) {
       gameState.currentWeather = gameState.forcedNextWeather;
       gameState.forcedNextWeather = null;
@@ -311,27 +329,47 @@
     updateUI();
   }
 
+  // 根據權重 (weight) 隨機抽取卡牌
+  function getRandomCardByWeight() {
+    const totalWeight = CARDS.reduce((sum, card) => sum + card.weight, 0);
+    let randomNum = Math.random() * totalWeight;
+    for (let card of CARDS) {
+      if (randomNum < card.weight) return card;
+      randomNum -= card.weight;
+    }
+    return CARDS[0];
+  }
+
   function drawFiveCards() {
     gameState.drawnCards = [];
     for (let i = 0; i < 5; i++) {
-      gameState.drawnCards.push(CARDS[Math.floor(Math.random() * CARDS.length)]);
+      gameState.drawnCards.push(getRandomCardByWeight());
     }
   }
 
   function refreshHand() {
     const isP1 = gameState.activePlayer === 'p1';
+    const hasFree = isP1 ? gameState.p1FreeRefreshNext : gameState.p2FreeRefreshNext;
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
-    if (currentHoney < 1) {
+    if (!hasFree && currentHoney < 1) {
       alert("蜜糖不足 1 個，無法重新洗牌！");
       return;
     }
 
     saveHistoryState();
-    deductHoney(1);
+
+    if (hasFree) {
+      if (isP1) gameState.p1FreeRefreshNext = false;
+      else gameState.p2FreeRefreshNext = false;
+      document.getElementById('ui-log').innerText = "😤 使用「任性一下」特權，本次洗牌免費！";
+    } else {
+      deductHoney(1);
+      document.getElementById('ui-log').innerText = "🔄 已花費 1 蜜糖重新洗牌！";
+    }
+
     drawFiveCards();
     gameState.selectedCard = null;
-    document.getElementById('ui-log').innerText = "🔄 已花費 1 蜜糖重新洗牌！";
     updateUI();
   }
 
@@ -344,7 +382,6 @@
     document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
     document.getElementById('ui-honey').innerText = `🍯 ${isP1 ? gameState.p1Honey : gameState.p2Honey}`;
     
-    // 更新標籤為自訂名稱與毛豬分
     document.getElementById('label-p1-score').innerText = `🐻 ${p1Name}分`;
     document.getElementById('label-p2-score').innerText = `🐷 毛豬分`;
 
@@ -354,6 +391,16 @@
     } else {
       document.getElementById('ui-p1-score').innerText = `🔒 隱藏`;
       document.getElementById('ui-p2-score').innerText = `🔒 隱藏`;
+    }
+
+    const hasFreeRefresh = isP1 ? gameState.p1FreeRefreshNext : gameState.p2FreeRefreshNext;
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (hasFreeRefresh) {
+      refreshBtn.innerText = "😤 免費洗牌";
+      refreshBtn.style.background = "#e91e63";
+    } else {
+      refreshBtn.innerText = "🔄 洗牌 (1🍯)";
+      refreshBtn.style.background = "#ff9800";
     }
 
     const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
@@ -403,7 +450,7 @@
         <div style="font-size:0.6rem; font-weight:bold;">${sourceType === 'drawn' ? '🍯 ' + originalCost : '✅ 已購買'}</div>
         <div class="card-desc">${card.desc}</div>
         <div>
-          ${sourceType === 'drawn' && storedList.length < 4 ? `<button class="btn-action" style="background:#81c784; color:#fff;" onclick="storeCard(event, ${idx})">📥 購買並存卡</button>` : ''}
+          ${sourceType === 'drawn' && storedList.length < 4 ? `<button class="btn-action" style="background:#81c784; color:#fff;" onclick="storeCard(event, ${idx})">📥 存卡</button>` : ''}
           <button class="btn-action" style="background:#ffd54f;" onclick="selectCard(event, '${sourceType}', ${idx})">${isSelected ? '取消' : '選擇'}</button>
         </div>
       `;
@@ -458,6 +505,9 @@
       if (gameState.selectedCard.id === 'allowance') {
         useAllowanceCard();
         return;
+      } else if (gameState.selectedCard.id === 'caprice') {
+        useCapriceCard();
+        return;
       } else if (gameState.selectedCard.id === 'party') {
         usePartyCard();
         return;
@@ -493,6 +543,30 @@
     updateUI();
   }
 
+  function useCapriceCard() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' 
+      ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+      : 0;
+
+    const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
+    if (currentHoney < cost) {
+      alert("蜜糖不足！");
+      return;
+    }
+
+    saveHistoryState();
+    deductHoney(cost);
+
+    if (isP1) gameState.p1FreeRefreshNext = true;
+    else gameState.p2FreeRefreshNext = true;
+
+    consumeSelectedCard();
+    alert("😤 任性一下成功！下一回合獲得免費洗牌 1 次特權！");
+    updateUI();
+  }
+
   function handleCellClick(index) {
     if (!gameState.selectedCard) {
       document.getElementById('ui-log').innerText = "請先從手牌選擇一張要放置或使用的卡牌！";
@@ -516,6 +590,7 @@
 
     const targetCell = gameState.grid[index];
 
+    // 處理【炸彈卡】
     if (card.id === 'bomb') {
       if (!targetCell || !targetCell.owner) {
         alert("炸彈卡必須選擇地圖上已放置的設施進行炸毀！");
@@ -532,13 +607,75 @@
       return;
     }
 
+    // 處理【朋友探訪】
+    if (card.id === 'visit') {
+      if (targetCell !== null) {
+        alert("朋友探訪只能選擇空地進行封鎖！");
+        return;
+      }
+      saveHistoryState();
+      deductHoney(cost);
+
+      const targetPlayer = isP1 ? 'p2' : 'p1';
+      gameState.grid[index] = { type: 'blocked', icon: '🚧', blockedFor: targetPlayer };
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `👋 朋友探訪！成功封鎖了該格子，對方下一回合無法在此放置物品！`;
+      updateUI();
+      return;
+    }
+
     if (isLocked) {
       alert("🎉 你受到笑笑熊聚會影響，本局無法在格子上放置建築！");
       return;
     }
 
+    // 處理【毛巾局】（需要連續 2 個相鄰格子）
+    if (card.id === 'towel_office') {
+      if (targetCell !== null) {
+        alert("選擇的首格必須是空地！");
+        return;
+      }
+
+      // 檢查水平右邊或垂直下邊是否有第二個空格
+      const row = Math.floor(index / 7);
+      const col = index % 7;
+
+      let secondIndex = -1;
+      if (col < 6 && gameState.grid[index + 1] === null) {
+        secondIndex = index + 1; // 優先向右佔據
+      } else if (row < 6 && gameState.grid[index + 7] === null) {
+        secondIndex = index + 7; // 向下佔據
+      }
+
+      if (secondIndex === -1) {
+        alert("「毛巾局」需要佔據相鄰 2 個連續空格，請選擇右邊或下方有空地的位置！");
+        return;
+      }
+
+      saveHistoryState();
+      deductHoney(cost);
+
+      let scoreBonus = card.points;
+      gameState.grid[index] = { ...card, owner: gameState.activePlayer };
+      gameState.grid[secondIndex] = { ...card, owner: gameState.activePlayer, isSecondary: true };
+
+      if (isP1) gameState.p1Score += scoreBonus;
+      else gameState.p2Score += scoreBonus;
+
+      recordBuildingStat(gameState.activePlayer, card.name, card.icon, scoreBonus);
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `🏢 成功興建大樓「毛巾局」！佔用 2 格，得分 +${scoreBonus}！`;
+      updateUI();
+
+      if (checkBoardFull()) setTimeout(() => endGame(true), 300);
+      return;
+    }
+
+    // 普通建築放置
     if (targetCell !== null) {
-      document.getElementById('ui-log').innerText = "該格子已有設施或障礙，請選擇空地！";
+      document.getElementById('ui-log').innerText = "該格子已有設施、障礙或被封鎖，請選擇空地！";
       return;
     }
 
@@ -667,6 +804,8 @@
       p2Stored: JSON.parse(JSON.stringify(gameState.p2Stored)),
       p1BonusHoneyNext: gameState.p1BonusHoneyNext,
       p2BonusHoneyNext: gameState.p2BonusHoneyNext,
+      p1FreeRefreshNext: gameState.p1FreeRefreshNext,
+      p2FreeRefreshNext: gameState.p2FreeRefreshNext,
       drawnCards: JSON.parse(JSON.stringify(gameState.drawnCards)),
       p1Stats: JSON.parse(JSON.stringify(gameState.p1BuildStats)),
       p2Stats: JSON.parse(JSON.stringify(gameState.p2BuildStats))
@@ -681,6 +820,7 @@
     gameState.p1Honey = lastState.p1Honey; gameState.p2Honey = lastState.p2Honey;
     gameState.p1Stored = lastState.p1Stored; gameState.p2Stored = lastState.p2Stored;
     gameState.p1BonusHoneyNext = lastState.p1BonusHoneyNext; gameState.p2BonusHoneyNext = lastState.p2BonusHoneyNext;
+    gameState.p1FreeRefreshNext = lastState.p1FreeRefreshNext; gameState.p2FreeRefreshNext = lastState.p2FreeRefreshNext;
     gameState.drawnCards = lastState.drawnCards;
     gameState.p1BuildStats = lastState.p1Stats; gameState.p2BuildStats = lastState.p2Stats;
     gameState.selectedCard = null;
@@ -777,7 +917,6 @@
       </div>
     `;
 
-    // 觸發勝利獎勵改名彈窗
     if (winnerKey) {
       setTimeout(() => triggerRenameReward(winnerKey), 600);
     }
@@ -825,7 +964,6 @@
     document.getElementById('rename-modal').classList.remove('active');
     alert(`✅ 已成功改名為「${newName}」！此名稱將永久記錄並使用於往後的遊戲！`);
     
-    // 更新終局結算頁面的顯示文字
     const winnerDisplay = document.getElementById('winner-display');
     if (playerKey === 'p1') winnerDisplay.innerText = `🐻 ${p1Name} 贏得笑笑熊國冠軍！`;
     else winnerDisplay.innerText = `🐷 ${p2Name} 贏得笑笑熊國冠軍！`;
