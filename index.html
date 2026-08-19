@@ -82,13 +82,23 @@
     .modal-overlay.active { display: flex; }
     .modal-content { background: #fff; padding: 14px; border-radius: var(--border-radius); width: 90%; max-height: 85%; overflow-y: auto; }
     
-    .weather-opt { background: #f5f5f5; border: 1px solid #ddd; padding: 8px; border-radius: 8px; margin: 4px 0; cursor: pointer; font-size: 0.8rem; text-align: left; }
-    .weather-opt:hover { background: #e0f7fa; }
+    .weather-opt, .rename-opt { background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin: 6px 0; cursor: pointer; font-size: 0.9rem; text-align: center; font-weight: bold; }
+    .weather-opt:hover, .rename-opt:hover { background: #e0f7fa; border-color: #00bcd4; }
   </style>
 </head>
 <body>
 
 <div id="app">
+  <!-- 改名獎勵彈窗 -->
+  <div id="rename-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>🏆 勝利者的榮耀獎勵！</h2>
+      <p id="rename-title" style="margin-bottom:8px; font-weight:bold; color:#fda085;"></p>
+      <p style="margin-bottom:8px;">你可以為勝利角色選擇一個全新姓名，並記錄永久保存：</p>
+      <div id="rename-options"></div>
+    </div>
+  </div>
+
   <!-- 天氣師彈窗 -->
   <div id="weather-modal" class="modal-overlay">
     <div class="modal-content">
@@ -98,7 +108,7 @@
     </div>
   </div>
 
-  <!-- 修改點 1：簡化規則說明，只包含遊戲玩法，不說明卡牌用法 -->
+  <!-- 玩法說明彈窗 -->
   <div id="help-modal" class="modal-overlay">
     <div class="modal-content">
       <h2>⚔️ 笑笑熊國：玩法說明</h2>
@@ -128,7 +138,7 @@
   <div id="transition-screen" class="screen">
     <h2 id="trans-title">請交接裝置</h2>
     <div id="trans-avatar" class="avatar-large">🐻</div>
-    <p id="trans-msg">輪到小笑笑熊的回合了！</p>
+    <p id="trans-msg">輪到小熊熊的回合了！</p>
     <div style="flex:1"></div>
     <button id="trans-btn" class="btn" onclick="completeTransition()">準備好了！</button>
   </div>
@@ -138,8 +148,9 @@
     <div class="game-header">
       <div class="stat-box"><span class="stat-label">局數</span><span id="ui-round" class="stat-value">1/10</span></div>
       <div class="stat-box"><span class="stat-label">蜜糖</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
-      <div class="stat-box"><span class="stat-label">🐻 熊熊分</span><span id="ui-p1-score" class="stat-value">✨ 0</span></div>
-      <div class="stat-box"><span class="stat-label">🐷 豬豬分</span><span id="ui-p2-score" class="stat-value">✨ 0</span></div>
+      <!-- 修改點 1 & 2：角色名稱為 小熊熊，分數顯示為 毛豬分 -->
+      <div class="stat-box"><span class="stat-label" id="label-p1-score">🐻 熊熊分</span><span id="ui-p1-score" class="stat-value">✨ 0</span></div>
+      <div class="stat-box"><span class="stat-label" id="label-p2-score">🐷 毛豬分</span><span id="ui-p2-score" class="stat-value">✨ 0</span></div>
       <button class="btn-redo" id="redo-btn" onclick="redoAction()">↩️ Redo</button>
     </div>
 
@@ -176,7 +187,10 @@
 </div>
 
 <script>
-  // 基礎設施與 4 大特別卡牌
+  // 讀取/初始化玩家持久化名字
+  let p1Name = localStorage.getItem('p1Name') || '小熊熊';
+  let p2Name = localStorage.getItem('p2Name') || '毛巾豬';
+
   const CARDS = [
     { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 10, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
     { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 15, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
@@ -185,7 +199,6 @@
     { id: 'windmill', name: '風車發電機', icon: '🌪️', cost: 2, weight: 8, points: 15, desc: '每局額外+1蜂蜜。', type: 'build' },
     { id: 'balloon', name: '觀光熱氣球', icon: '🎈', cost: 4, weight: -10, points: 40, desc: '極高分數，但重量負數！', type: 'build' },
     
-    // 特別卡牌
     { id: 'allowance', name: '零用錢', icon: '🪙', cost: 0, weight: 0, points: 0, desc: '【免費特別卡】下一局可額外獲得 5 個蜜糖！', type: 'special_allowance' },
     { id: 'bomb', name: '炸彈卡', icon: '💣', cost: 2, weight: 0, points: 0, desc: '【特別卡】直接炸毀地圖上任意設施！', type: 'special_bomb' },
     { id: 'party', name: '笑笑熊聚會', icon: '🎉', cost: 3, weight: 0, points: 0, desc: '【特別卡】指定對方下一局只能儲卡，不能放卡！', type: 'special_party' },
@@ -238,7 +251,7 @@
     waters.forEach(i => gameState.grid[i] = { type: 'water', icon: '🌊' });
 
     switchScreen('transition-screen');
-    setupTransition("笑笑熊國領地爭霸！", "🐻", "小笑笑熊 (P1) 的回合！", "btn", () => startTurn());
+    setupTransition("笑笑熊國領地爭霸！", "🐻", `${p1Name} (P1) 的回合！`, "btn", () => startTurn());
   }
 
   function switchScreen(screenId) {
@@ -331,6 +344,10 @@
     document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
     document.getElementById('ui-honey').innerText = `🍯 ${isP1 ? gameState.p1Honey : gameState.p2Honey}`;
     
+    // 更新標籤為自訂名稱與毛豬分
+    document.getElementById('label-p1-score').innerText = `🐻 ${p1Name}分`;
+    document.getElementById('label-p2-score').innerText = `🐷 毛豬分`;
+
     if (gameState.round <= 7) {
       document.getElementById('ui-p1-score').innerText = `✨ ${gameState.p1Score}`;
       document.getElementById('ui-p2-score').innerText = `✨ ${gameState.p2Score}`;
@@ -378,7 +395,6 @@
       const isSelected = gameState.selectedCardSource === sourceType && gameState.selectedCardIndex === idx;
       
       cardEl.className = `card ${card.type.includes('special') ? 'special' : ''} ${isSelected ? 'selected' : ''}`;
-      
       const originalCost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
 
       cardEl.innerHTML = `
@@ -395,7 +411,6 @@
     });
   }
 
-  /* 修改點 2：修正存卡扣費問題，明確扣除玩家蜜糖，並支援 Redo 恢復 */
   function storeCard(e, index) {
     e.stopPropagation();
     const isP1 = gameState.activePlayer === 'p1';
@@ -415,10 +430,7 @@
       return;
     }
 
-    // 儲存目前狀態，方便 Redo 回退蜜糖與手牌
     saveHistoryState();
-
-    // 實質扣費與搬移卡牌
     deductHoney(cost);
     const removedCard = gameState.drawnCards.splice(index, 1)[0];
     storedList.push(removedCard);
@@ -457,7 +469,6 @@
     updateUI();
   }
 
-  /* 🪙 使用零用錢卡 */
   function useAllowanceCard() {
     const isP1 = gameState.activePlayer === 'p1';
     const card = gameState.selectedCard;
@@ -482,7 +493,6 @@
     updateUI();
   }
 
-  /* 💣 放置與炸彈卡處理 */
   function handleCellClick(index) {
     if (!gameState.selectedCard) {
       document.getElementById('ui-log').innerText = "請先從手牌選擇一張要放置或使用的卡牌！";
@@ -493,7 +503,6 @@
     const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
     const card = gameState.selectedCard;
     
-    // 手牌需付費，庫存卡則已付費
     const cost = gameState.selectedCardSource === 'drawn' 
       ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
       : 0;
@@ -702,17 +711,17 @@
     if (gameState.activePlayer === 'p1') {
       gameState.activePlayer = 'p2';
       switchScreen('transition-screen');
-      setupTransition(`第 ${gameState.round} 局 - 交給毛巾豬`, "🐷", "毛巾豬 (P2) 回合，準備進行獨立擺奪領地！", "btn", () => startTurn());
+      setupTransition(`第 ${gameState.round} 局 - 交給${p2Name}`, "🐷", `${p2Name} (P2) 回合，準備進行獨立擺奪領地！`, "btn", () => startTurn());
     } else {
       if (gameState.round >= gameState.maxRounds) { endGame(false); return; }
       gameState.round++;
       gameState.activePlayer = 'p1';
       switchScreen('transition-screen');
-      setupTransition(`第 ${gameState.round} 局 - 交給小笑笑熊`, "🐻", gameState.round === 8 ? "⚠️ 第 8 局起進入暗牌盲測模式！" : "小笑笑熊 (P1) 回合！", "btn", () => startTurn());
+      setupTransition(`第 ${gameState.round} 局 - 交給${p1Name}`, "🐻", gameState.round === 8 ? "⚠️ 第 8 局起進入暗牌盲測模式！" : `${p1Name} (P1) 回合！`, "btn", () => startTurn());
     }
   }
 
-  /* --- 終局揭曉 --- */
+  /* --- 終局揭曉與獎勵改名系統 --- */
   function endGame(isFullBoard = false) {
     switchScreen('end-screen');
 
@@ -723,9 +732,17 @@
     });
 
     let winnerText = "";
-    if (gameState.p1Score > gameState.p2Score) winnerText = "🐻 小笑笑熊 贏得笑笑熊國冠軍！";
-    else if (gameState.p2Score > gameState.p1Score) winnerText = "🐷 毛巾豬 贏得笑笑熊國冠軍！";
-    else winnerText = "🤝 雙方勢均力敵，平手！";
+    let winnerKey = null;
+
+    if (gameState.p1Score > gameState.p2Score) {
+      winnerText = `🐻 ${p1Name} 贏得笑笑熊國冠軍！`;
+      winnerKey = 'p1';
+    } else if (gameState.p2Score > gameState.p1Score) {
+      winnerText = `🐷 ${p2Name} 贏得笑笑熊國冠軍！`;
+      winnerKey = 'p2';
+    } else {
+      winnerText = "🤝 雙方勢均力敵，平手！";
+    }
 
     document.getElementById('winner-display').innerText = winnerText;
     document.getElementById('end-reason').innerText = isFullBoard ? "⚡ 地盤已被全數佔滿！即時完結！" : "10 局戰罷順利完成！";
@@ -744,7 +761,7 @@
       <h3 style="text-align:center; margin-bottom:4px; color:var(--text-main);">📊 終局詳細數據揭曉</h3>
       
       <div style="background:#fff0f3; padding:6px; border-radius:8px; margin-bottom:8px;">
-        <b style="color:var(--p1-dark);">🐻 小笑笑熊 總分：${gameState.p1Score} 分 (佔領 ${p1Territory} 格)</b>
+        <b style="color:var(--p1-dark);">🐻 ${p1Name} 總分：${gameState.p1Score} 分 (佔領 ${p1Territory} 格)</b>
         <table class="detail-table">
           <thead><tr><th>建築設施</th><th>數量</th><th>得分</th></tr></thead>
           <tbody>${p1Rows || '<tr><td colspan="3">無建造設施</td></tr>'}</tbody>
@@ -752,13 +769,66 @@
       </div>
 
       <div style="background:#e1f5fe; padding:6px; border-radius:8px;">
-        <b style="color:var(--p2-dark);">🐷 毛巾豬 總分：${gameState.p2Score} 分 (佔領 ${p2Territory} 格)</b>
+        <b style="color:var(--p2-dark);">🐷 ${p2Name} 總分：${gameState.p2Score} 分 (佔領 ${p2Territory} 格)</b>
         <table class="detail-table">
           <thead><tr><th>建築設施</th><th>數量</th><th>得分</th></tr></thead>
           <tbody>${p2Rows || '<tr><td colspan="3">無建造設施</td></tr>'}</tbody>
         </table>
       </div>
     `;
+
+    // 觸發勝利獎勵改名彈窗
+    if (winnerKey) {
+      setTimeout(() => triggerRenameReward(winnerKey), 600);
+    }
+  }
+
+  function triggerRenameReward(winnerKey) {
+    const titleEl = document.getElementById('rename-title');
+    const optsContainer = document.getElementById('rename-options');
+    optsContainer.innerHTML = '';
+
+    if (winnerKey === 'p1') {
+      titleEl.innerText = `🎉 恭喜 🐻 ${p1Name} 勝出！`;
+      const choices = ['鄭熊熊', '劉熊熊'];
+      choices.forEach(name => {
+        const btn = document.createElement('div');
+        btn.className = 'rename-opt';
+        btn.innerText = `改名為「${name}」`;
+        btn.onclick = () => saveNewName('p1', name);
+        optsContainer.appendChild(btn);
+      });
+    } else {
+      titleEl.innerText = `🎉 恭喜 🐷 ${p2Name} 勝出！`;
+      const choices = ['鄭毛巾', '劉毛巾'];
+      choices.forEach(name => {
+        const btn = document.createElement('div');
+        btn.className = 'rename-opt';
+        btn.innerText = `改名為「${name}」`;
+        btn.onclick = () => saveNewName('p2', name);
+        optsContainer.appendChild(btn);
+      });
+    }
+
+    document.getElementById('rename-modal').classList.add('active');
+  }
+
+  function saveNewName(playerKey, newName) {
+    if (playerKey === 'p1') {
+      p1Name = newName;
+      localStorage.setItem('p1Name', newName);
+    } else {
+      p2Name = newName;
+      localStorage.setItem('p2Name', newName);
+    }
+
+    document.getElementById('rename-modal').classList.remove('active');
+    alert(`✅ 已成功改名為「${newName}」！此名稱將永久記錄並使用於往後的遊戲！`);
+    
+    // 更新終局結算頁面的顯示文字
+    const winnerDisplay = document.getElementById('winner-display');
+    if (playerKey === 'p1') winnerDisplay.innerText = `🐻 ${p1Name} 贏得笑笑熊國冠軍！`;
+    else winnerDisplay.innerText = `🐷 ${p2Name} 贏得笑笑熊國冠軍！`;
   }
 </script>
 </body>
