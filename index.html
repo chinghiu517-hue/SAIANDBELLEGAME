@@ -104,14 +104,10 @@
       <h2>⚔️ 笑笑熊國：規則說明</h2>
       <ul style="padding-left:16px; font-size:0.75rem; line-height:1.5;">
         <li><b>固定蜜糖</b>：每局基礎補充固定為 <b>5 蜜糖</b>！</li>
+        <li><b>購買與存卡</b>：需支付對應蜜糖購買卡牌才能儲存至庫存區，存卡動作亦<b>支援 Redo 復原</b>！</li>
         <li><b>5張卡牌與刷新</b>：每局提供 5 張卡，可用 <b>1 蜜糖</b> 洗牌重抽。</li>
-        <li><b>領地領先獎勵</b>：佔據地圖最多格子的領先者，下局額外獲得 <b>+1 蜜糖</b>！</li>
-        <li><b>4 大特別卡</b>：
-          <br>🪙 <b>零用錢</b>（免費）：下局額外獲得 5 個蜜糖。
-          <br>💣 <b>炸彈卡</b>：炸毀地圖上的任意設施。
-          <br>🎉 <b>笑笑熊聚會</b>：讓對手下一局無法放置卡牌。
-          <br>🌤️ <b>天氣師</b>：掌控下一局的天氣狀況。
-        </li>
+        <li><b>地盤領先獎勵</b>：佔據地圖最多格子的領先者，下局額外獲得 <b>+1 蜜糖</b>！</li>
+        <li><b>特別卡</b>：包含零用錢 (🪙 額外蜜糖)、炸彈 (💣 破壞)、聚會 (🎉 封印對方放置)、天氣師 (🌤️ 天氣掌控)。</li>
       </ul>
       <button class="btn" style="width:100%; margin-top:8px;" onclick="toggleHelpModal(false)">開始遊戲！</button>
     </div>
@@ -157,10 +153,10 @@
     </div>
     <div class="card-hand" id="drawn-hand"></div>
 
-    <b style="font-size:0.75rem;">📥 庫存積累卡牌 (上限4張)：</b>
+    <b style="font-size:0.75rem;">📥 庫存積累卡牌 (上限4張，已付費)：</b>
     <div class="card-hand" id="stored-hand" style="min-height: 120px; background: #f5efe6; border-radius: 8px; padding:2px;"></div>
 
-    <div class="log-box" id="ui-log">請選擇卡牌放置於地圖上，或進行儲蓄。</div>
+    <div class="log-box" id="ui-log">請選擇卡牌放置於地圖上，或購買後存入庫存。</div>
     <div style="flex:1"></div>
     <button class="btn" id="end-turn-btn" style="width:100%; margin-top:2px;" onclick="finishTurn()">結束本局回合 ➔</button>
   </div>
@@ -210,7 +206,7 @@
     p1Honey: 5, p2Honey: 5,
     p1Score: 0, p2Score: 0,
     p1Stored: [], p2Stored: [],
-    p1BonusHoneyNext: 0, p2BonusHoneyNext: 0, // 零用錢卡獎勵
+    p1BonusHoneyNext: 0, p2BonusHoneyNext: 0,
     drawnCards: [],
     selectedCard: null, selectedCardSource: null, selectedCardIndex: -1,
     currentWeather: null, forcedNextWeather: null,
@@ -267,7 +263,6 @@
     gameState.selectedCard = null;
     gameState.historyStack = [];
 
-    // 天氣設置
     if (gameState.forcedNextWeather) {
       gameState.currentWeather = gameState.forcedNextWeather;
       gameState.forcedNextWeather = null;
@@ -277,7 +272,6 @@
 
     const isP1 = gameState.activePlayer === 'p1';
 
-    // 計算地盤領先獎勵
     let p1Territory = 0, p2Territory = 0;
     gameState.grid.forEach(c => {
       if (c && c.owner === 'p1') p1Territory++;
@@ -288,23 +282,18 @@
     if (isP1 && p1Territory >= p2Territory && p1Territory > 0) territoryBonus = 1;
     if (!isP1 && p2Territory >= p1Territory && p2Territory > 0) territoryBonus = 1;
 
-    // 風車設施加成
     let windmillBonus = 0;
     gameState.grid.forEach(c => { if(c && c.id === 'windmill' && c.owner === gameState.activePlayer) windmillBonus++; });
 
-    // 零用錢獎勵
     let bonusHoney = isP1 ? gameState.p1BonusHoneyNext : gameState.p2BonusHoneyNext;
     if (isP1) gameState.p1BonusHoneyNext = 0; else gameState.p2BonusHoneyNext = 0;
 
-    // 每局固定 5 個蜜糖 + 額外獎勵
     const totalHoney = 5 + territoryBonus + windmillBonus + bonusHoney;
 
     if (isP1) gameState.p1Honey = totalHoney;
     else gameState.p2Honey = totalHoney;
 
-    // 抽 5 張卡牌
     drawFiveCards();
-
     updateUI();
   }
 
@@ -315,7 +304,6 @@
     }
   }
 
-  /* 用 1 蜜糖重新洗牌 */
   function refreshHand() {
     const isP1 = gameState.activePlayer === 'p1';
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
@@ -390,15 +378,20 @@
       
       cardEl.className = `card ${card.type.includes('special') ? 'special' : ''} ${isSelected ? 'selected' : ''}`;
       
-      const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+      // 計算天氣減免後的實際費用
+      const cost = sourceType === 'drawn' 
+        ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+        : 0; // 已經購買存入庫存的卡，使用時費用為 0
+
+      const originalCost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
 
       cardEl.innerHTML = `
         <div class="card-icon">${card.icon}</div>
         <div class="card-title">${card.name}</div>
-        <div style="font-size:0.6rem; font-weight:bold;">🍯 ${cost}</div>
+        <div style="font-size:0.6rem; font-weight:bold;">${sourceType === 'drawn' ? '🍯 ' + originalCost : '✅ 已購買'}</div>
         <div class="card-desc">${card.desc}</div>
         <div>
-          ${sourceType === 'drawn' && storedList.length < 4 ? `<button class="btn-action" style="background:#81c784; color:#fff;" onclick="storeCard(event, ${idx})">📥 存卡</button>` : ''}
+          ${sourceType === 'drawn' && storedList.length < 4 ? `<button class="btn-action" style="background:#81c784; color:#fff;" onclick="storeCard(event, ${idx})">📥 購買並存卡</button>` : ''}
           <button class="btn-action" style="background:#ffd54f;" onclick="selectCard(event, '${sourceType}', ${idx})">${isSelected ? '取消' : '選擇'}</button>
         </div>
       `;
@@ -406,15 +399,38 @@
     });
   }
 
+  /* 📥 修改點 1：需先扣除蜜糖費用才能存卡，並記錄 Redo 狀態 */
   function storeCard(e, index) {
     e.stopPropagation();
     const isP1 = gameState.activePlayer === 'p1';
     const storedList = isP1 ? gameState.p1Stored : gameState.p2Stored;
-    if (storedList.length >= 4) return;
+    if (storedList.length >= 4) {
+      alert("庫存區已滿（上限 4 張）！");
+      return;
+    }
 
-    const card = gameState.drawnCards.splice(index, 1)[0];
-    storedList.push(card);
+    const card = gameState.drawnCards[index];
+    const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+    const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
+
+    if (currentHoney < cost) {
+      alert(`蜜糖不足，無法花費 🍯 ${cost} 購買此卡存入庫存！`);
+      return;
+    }
+
+    // 修改點 2：保存歷史紀錄以支援 Redo 存卡
+    saveHistoryState();
+
+    // 扣除費用並存卡
+    deductHoney(cost);
+    const removedCard = gameState.drawnCards.splice(index, 1)[0];
+    storedList.push(removedCard);
+    
     gameState.selectedCard = null;
+    gameState.selectedCardSource = null;
+    gameState.selectedCardIndex = -1;
+
+    document.getElementById('ui-log').innerText = `📥 花費 🍯 ${cost} 購買了 ${card.name} 並存入庫存！`;
     updateUI();
   }
 
@@ -447,8 +463,22 @@
   /* 🪙 使用零用錢卡 */
   function useAllowanceCard() {
     const isP1 = gameState.activePlayer === 'p1';
-    saveHistoryState();
     
+    // 從手牌直接用需要扣費用（零用錢卡費用為 0），庫存卡費用也是 0
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' 
+      ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+      : 0;
+
+    const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
+    if (currentHoney < cost) {
+      alert("蜜糖不足！");
+      return;
+    }
+
+    saveHistoryState();
+    deductHoney(cost);
+
     if (isP1) gameState.p1BonusHoneyNext += 5;
     else gameState.p2BonusHoneyNext += 5;
 
@@ -467,7 +497,12 @@
     const isP1 = gameState.activePlayer === 'p1';
     const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
     const card = gameState.selectedCard;
-    const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+    
+    // 如果來自手牌需付費，如果已存入庫存區則免再付費
+    const cost = gameState.selectedCardSource === 'drawn' 
+      ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+      : 0;
+      
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
@@ -533,7 +568,10 @@
   function usePartyCard() {
     const isP1 = gameState.activePlayer === 'p1';
     const card = gameState.selectedCard;
-    const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+    const cost = gameState.selectedCardSource === 'drawn' 
+      ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+      : 0;
+
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
@@ -541,7 +579,7 @@
       return;
     }
 
-    if (confirm(`確定花費 🍯 ${cost} 使用笑笑熊聚會卡？對方下一局將無法放置建築！`)) {
+    if (confirm(`確定使用笑笑熊聚會卡？對方下一局將無法放置建築！`)) {
       saveHistoryState();
       deductHoney(cost);
 
@@ -557,7 +595,10 @@
   function useWeatherCard() {
     const isP1 = gameState.activePlayer === 'p1';
     const card = gameState.selectedCard;
-    const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+    const cost = gameState.selectedCardSource === 'drawn' 
+      ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost)
+      : 0;
+
     const currentHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
 
     if (currentHoney < cost) {
@@ -639,6 +680,8 @@
     gameState.drawnCards = lastState.drawnCards;
     gameState.p1BuildStats = lastState.p1Stats; gameState.p2BuildStats = lastState.p2Stats;
     gameState.selectedCard = null;
+    gameState.selectedCardSource = null;
+    gameState.selectedCardIndex = -1;
 
     document.getElementById('ui-log').innerText = "↩️ 已成功復原 (Redo) 上一步動作！";
     updateUI();
