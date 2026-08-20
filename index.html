@@ -44,7 +44,6 @@
 
     .event-banner { background: #e3f2fd; border: 1px solid #bbdefb; color: #0d47a1; padding: 4px 8px; border-radius: 8px; font-size: 0.68rem; margin-bottom: 4px; }
 
-    /* 網格系統 (支援 4x4 與 6x6) */
     .grid-container { display: grid; grid-gap: 4px; background: var(--panel-bg); padding: 6px; border-radius: var(--border-radius); box-shadow: var(--shadow); aspect-ratio: 1; width: 100%; margin: 2px 0; }
     .grid-4x4 { grid-template-columns: repeat(4, 1fr); }
     .grid-6x6 { grid-template-columns: repeat(6, 1fr); }
@@ -71,11 +70,17 @@
     .modal-overlay.active { display: flex; }
     .modal-content { background: #fff; padding: 12px; border-radius: var(--border-radius); width: 92%; max-height: 85%; overflow-y: auto; }
 
-    .country-select-card { background: #fff; border: 2px solid #ffe0b2; border-radius: 10px; padding: 8px; margin: 6px 0; cursor: pointer; }
-    .country-select-card:hover { border-color: #ff9800; }
+    /* 簡化版國家卡片 */
+    .country-select-card { background: #fff; border: 2px solid #ffe0b2; border-radius: 10px; padding: 12px; margin: 8px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .country-select-card:hover { border-color: #ff9800; background-color: #fffde7; }
+    .country-name { font-size: 1rem; font-weight: bold; color: #333; }
+    .country-status { font-size: 0.85rem; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
+    .status-passed { background: #e8f5e9; color: #2e7d32; }
+    .status-unpassed { background: #ffebee; color: #c62828; }
 
     .mini-game-board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 8px 0; }
     .mini-game-cell { background: #e0f2f1; border-radius: 4px; height: 35px; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .memory-card { background: #ffe0b2; border-radius: 6px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -107,14 +112,14 @@
     </div>
   </div>
 
-  <!-- 故事模式：國家選擇 -->
+  <!-- 故事模式：國家選擇 (僅顯示名字與過關狀態) -->
   <div id="country-screen" class="screen">
     <h2>🗺️ 選擇要拯救的國家</h2>
     <div id="country-list"></div>
     <button class="btn" style="background:#90a4ae;" onclick="switchScreen('start-screen')">⬅️ 返回主選單</button>
   </div>
 
-  <!-- 主遊戲畫面 (通用) -->
+  <!-- 主遊戲畫面 -->
   <div id="game-screen" class="screen">
     <div class="game-header">
       <div class="stat-box"><span class="stat-label">回合</span><span id="ui-round" class="stat-value">1/12</span></div>
@@ -153,14 +158,13 @@
     <div style="font-size:1.3rem; font-weight:bold; text-align:center; margin:8px 0;" id="end-status">計算中...</div>
     <div style="font-size:0.8rem; text-align:center; color:var(--text-muted); white-space:pre-line;" id="end-details"></div>
     <div style="flex:1"></div>
-    <button class="btn" onclick="switchScreen('start-screen')">返回主選單</button>
+    <button class="btn" onclick="showCountrySelect()">返回選擇關卡</button>
   </div>
 </div>
 
 <script>
-  let gameMode = 'pvp'; // 'pvp' 對戰模式 或 'story' 故事模式
+  let gameMode = 'pvp';
   
-  // 通用基礎建築
   const PVP_BUILDINGS = [
     { id: 'house', name: '小熊屋', icon: '🏠', cost: 1, points: 10 },
     { id: 'honey_factory', name: '蜜糖工廠', icon: '🏭', cost: 2, points: 25 },
@@ -168,7 +172,6 @@
     { id: 'castle', name: '笑笑城堡', icon: '🏰', cost: 3, points: 50 }
   ];
 
-  // 故事模式 5 個國家設定
   const COUNTRIES = [
     {
       id: 'dalmatian', name: '1. 斑點狗國 🐶',
@@ -215,13 +218,14 @@
   ];
 
   let currentCountry = null;
+  let forestMiniGameCount = 0; // 每回合小遊戲次數記錄（最多 2 次）
+
   let gameState = {
     round: 1, maxRounds: 10,
-    activePlayer: 'p1', // p1: 小熊熊, p2: 毛巾豬
+    activePlayer: 'p1',
     p1Honey: 5, p2Honey: 5,
     p1Score: 0, p2Score: 0,
-    grid: [],
-    hand: [],
+    grid: [], hand: [],
     selectedIndex: -1,
     dalmatianHouses: 0,
     lakeExpandCount: 0
@@ -236,7 +240,40 @@
     document.getElementById(id).classList.remove('active');
   }
 
-  /* --- 雙人對戰模式初始化 --- */
+  /* --- 國家通關記錄 (使用 localStorage) --- */
+  function getPassedCountries() {
+    return JSON.parse(localStorage.getItem('passed_countries') || '{}');
+  }
+
+  function markCountryPassed(id) {
+    const passed = getPassedCountries();
+    passed[id] = true;
+    localStorage.setItem('passed_countries', JSON.stringify(passed));
+  }
+
+  /* --- 故事模式選關 (僅顯示名字與過關狀態) --- */
+  function showCountrySelect() {
+    switchScreen('country-screen');
+    const container = document.getElementById('country-list');
+    container.innerHTML = '';
+    const passedMap = getPassedCountries();
+
+    COUNTRIES.forEach(c => {
+      const isPassed = !!passedMap[c.id];
+      const card = document.createElement('div');
+      card.className = 'country-select-card';
+      card.innerHTML = `
+        <span class="country-name">${c.name}</span>
+        <span class="country-status ${isPassed ? 'status-passed' : 'status-unpassed'}">
+          ${isPassed ? '✅ 已通關' : '❌ 未通關'}
+        </span>
+      `;
+      card.onclick = () => startStoryGame(c);
+      container.appendChild(card);
+    });
+  }
+
+  /* --- 遊戲初始化 --- */
   function startPvpGame() {
     gameMode = 'pvp';
     gameState.round = 1;
@@ -245,32 +282,12 @@
     gameState.p1Honey = 5; gameState.p2Honey = 5;
     gameState.p1Score = 0; gameState.p2Score = 0;
     gameState.grid = Array(16).fill(null);
+    forestMiniGameCount = 0;
     
     drawCards(4);
-    
-    const gridContainer = document.getElementById('grid-container');
-    gridContainer.className = "grid-container grid-4x4";
-    
+    document.getElementById('grid-container').className = "grid-container grid-4x4";
     switchScreen('game-screen');
     updateUI();
-  }
-
-  /* --- 故事模式選關與初始化 --- */
-  function showCountrySelect() {
-    switchScreen('country-screen');
-    const container = document.getElementById('country-list');
-    container.innerHTML = '';
-
-    COUNTRIES.forEach(c => {
-      const card = document.createElement('div');
-      card.className = 'country-select-card';
-      card.innerHTML = `
-        <h3 style="color:#e65100;">${c.name}</h3>
-        <p style="white-space:pre-line; text-align:left; font-size:0.75rem; margin-top:4px;">${c.desc}</p>
-      `;
-      card.onclick = () => startStoryGame(c);
-      container.appendChild(card);
-    });
   }
 
   function startStoryGame(country) {
@@ -279,11 +296,12 @@
     gameState.round = 1;
     gameState.maxRounds = 12;
     gameState.activePlayer = 'p1';
-    gameState.p1Honey = 5; // 故事模式共享蜜糖
-    gameState.p1Score = 0; // 共享分數
+    gameState.p1Honey = 5;
+    gameState.p1Score = 0;
     gameState.grid = Array(36).fill(null);
     gameState.dalmatianHouses = 0;
     gameState.lakeExpandCount = 0;
+    forestMiniGameCount = 0;
 
     if (country.id === 'pinkbear') {
       [14, 15, 20, 21].forEach(i => gameState.grid[i] = { type: 'lake', name: '粉紅湖', icon: '🌸' });
@@ -292,10 +310,7 @@
     }
 
     drawCards(country.id === 'penguin' ? 3 : 5);
-
-    const gridContainer = document.getElementById('grid-container');
-    gridContainer.className = "grid-container grid-6x6";
-
+    document.getElementById('grid-container').className = "grid-container grid-6x6";
     switchScreen('game-screen');
     updateUI();
   }
@@ -309,7 +324,6 @@
     }
   }
 
-  /* --- 畫面更新 UI --- */
   function updateUI() {
     const isP1 = gameState.activePlayer === 'p1';
     document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
@@ -322,10 +336,9 @@
     } else {
       document.getElementById('ui-honey').innerText = `🍯 ${gameState.p1Honey}`;
       document.getElementById('ui-score').innerText = `✨ ${gameState.p1Score}`;
-      document.getElementById('ui-event-banner').innerText = `📢 【${currentCountry.name}】${currentCountry.desc.split('\n')[0]}`;
+      document.getElementById('ui-event-banner').innerText = `📢 【${currentCountry.name}】${currentCountry.desc.split('\n')[0]} (採蜜本局：${forestMiniGameCount}/2次)`;
     }
 
-    // 更新技能限制
     const btnBuild = document.getElementById('btn-act-build');
     const btnForest = document.getElementById('btn-act-forest');
     btnBuild.classList.remove('disabled');
@@ -334,7 +347,7 @@
     if (gameMode === 'story') {
       if (currentCountry.id === 'bigdog' && isP1) {
         btnBuild.classList.add('disabled');
-        document.getElementById('ui-log').innerText = "⚠️ 小熊熊去尋找細肥的，本回合無法放置建築！";
+        document.getElementById('ui-log').innerText = "⚠️ 小熊熊去找細肥的，本回合無法放置建築！";
       }
       if (currentCountry.id === 'pinkbear' && !isP1) {
         btnBuild.classList.add('disabled');
@@ -390,11 +403,15 @@
     renderHand();
   }
 
-  /* --- 行動系統 --- */
+  /* --- 行動觸發與森林小遊戲 (最多2次/回合) --- */
   function selectAction(type) {
     const isP1 = gameState.activePlayer === 'p1';
 
     if (type === 'forest') {
+      if (forestMiniGameCount >= 2) {
+        alert("⚠️ 本局森林採蜜小遊戲次數已達上限 (最多 2 次)！");
+        return;
+      }
       if (gameMode === 'story' && currentCountry.id === 'pinkbear' && !isP1) {
         alert("毛巾豬心情低落，無法前往森林！");
         return;
@@ -434,7 +451,6 @@
     const card = gameState.hand[gameState.selectedIndex];
     let curHoney = gameMode === 'pvp' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.p1Honey;
 
-    // 特殊炸彈處理
     if (card.id === 'bomb') {
       if (!gameState.grid[index] || gameState.grid[index].type !== 'obstacle') {
         alert("炸彈只能炸毀障礙物！");
@@ -451,7 +467,6 @@
     if (curHoney < card.cost) { alert("蜜糖不足！"); return; }
     if (gameState.grid[index] !== null) { alert("此位置無法放置！"); return; }
 
-    // 限制測試 (故事模式)
     if (gameMode === 'story') {
       if (currentCountry.id === 'dolphin' && isP1 && Math.random() < 0.25) {
         gameState.p1Honey -= card.cost;
@@ -469,7 +484,6 @@
       }
     }
 
-    // 成功放置
     if (gameMode === 'pvp') {
       if (isP1) { gameState.p1Honey -= card.cost; gameState.p1Score += card.points; }
       else { gameState.p2Honey -= card.cost; gameState.p2Score += card.points; }
@@ -487,41 +501,52 @@
     updateUI();
   }
 
-  /* --- 森林小遊戲 --- */
+  /* --- 3 大小遊戲完整邏輯實作 --- */
   function triggerForestMiniGame() {
-    const games = ['poker', 'sudoku', 'match'];
+    const games = ['poker', 'sudoku', 'memory'];
     const selectedGame = games[Math.floor(Math.random() * games.length)];
     const modal = document.getElementById('minigame-modal');
     const content = document.getElementById('minigame-content');
     modal.classList.add('active');
 
+    // 1. 比大小
     if (selectedGame === 'poker') {
       const currentCard = Math.floor(Math.random() * 10) + 1;
       content.innerHTML = `
         <h2>🃏 森林卡牌接龍</h2>
-        <p>當前卡牌點數：<b style="font-size:1.5rem; color:#ff9800;">${currentCard}</b></p>
+        <p>當前卡牌點數：<b style="font-size:1.8rem; color:#ff9800;">${currentCard}</b></p>
         <p>請猜下一張牌比當前牌大還是小？</p>
         <div style="display:flex; gap:10px; margin:15px 0;">
           <button class="btn" onclick="playPokerGame(${currentCard}, 'bigger')">📈 比大</button>
           <button class="btn" onclick="playPokerGame(${currentCard}, 'smaller')">📉 比小</button>
         </div>
       `;
-    } else if (selectedGame === 'sudoku') {
+    } 
+    // 2. 6x6 簡易數獨點擊解密
+    else if (selectedGame === 'sudoku') {
       content.innerHTML = `
-        <h2>🧩 森林數獨解密</h2>
-        <p>請找出並點擊缺少的正確數字：</p>
-        <div class="mini-game-board">
-          <div class="mini-game-cell">1</div><div class="mini-game-cell">2</div><div class="mini-game-cell">3</div>
-          <div class="mini-game-cell">4</div><div class="mini-game-cell">5</div><div class="mini-game-cell" style="background:#ffcdd2;" onclick="finishMiniGame(true, 3)">❓</div>
+        <h2>🧩 6x6 森林數獨解密</h2>
+        <p>請找出並點擊缺少的正確數字以獲取蜜糖：</p>
+        <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:15px 0;">
+          <div class="mini-game-cell">1</div>
+          <div class="mini-game-cell">2</div>
+          <div class="mini-game-cell">3</div>
+          <div class="mini-game-cell">4</div>
+          <div class="mini-game-cell">5</div>
+          <div class="mini-game-cell" style="background:#ffe082; color:#d81b60; font-size:1.1rem;" onclick="finishMiniGame(true, 3)">❓</div>
         </div>
       `;
-    } else {
+    } 
+    // 3. 圖案記憶連連看
+    else {
       content.innerHTML = `
-        <h2>🎴 圖案連連看</h2>
-        <p>請配對對應的圖案採集蜂蜜！</p>
-        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:15px 0;">
-          <button class="btn" onclick="finishMiniGame(true, 2)">🍯 採集蜂蜜</button>
-          <button class="btn" onclick="finishMiniGame(true, 2)">🍯 採集蜂蜜</button>
+        <h2>🎴 圖案記憶連連看</h2>
+        <p>點擊翻開卡牌，翻出 🍯 即可採集蜂蜜！</p>
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:15px 0;" id="memory-cards-container">
+          <div class="memory-card" onclick="flipMemoryCard(this, '🍯')">❓</div>
+          <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
+          <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
+          <div class="memory-card" onclick="flipMemoryCard(this, '🍯')">❓</div>
         </div>
       `;
     }
@@ -530,11 +555,28 @@
   function playPokerGame(currentCard, choice) {
     const nextCard = Math.floor(Math.random() * 10) + 1;
     const win = (choice === 'bigger' && nextCard >= currentCard) || (choice === 'smaller' && nextCard <= currentCard);
-    alert(`下一張牌是：${nextCard}！${win ? '🎉 猜對了！獲得 3 個蜜糖！' : '❌ 猜錯了，沒採到蜜糖！'}`);
+    alert(`下一張牌是：${nextCard}！\n${win ? '🎉 猜對了！採到 3 個蜜糖！' : '❌ 猜錯了，沒採到蜜糖！'}`);
     finishMiniGame(win, 3);
   }
 
+  let memoryFlippedCount = 0;
+  function flipMemoryCard(el, icon) {
+    if (el.innerText !== '❓') return;
+    el.innerText = icon;
+    if (icon === '🍯') {
+      alert("🎉 翻到了 🍯！成功獲得 2 個蜜糖！");
+      finishMiniGame(true, 2);
+    } else {
+      memoryFlippedCount++;
+      if (memoryFlippedCount >= 2) {
+        alert("❌ 沒翻到蜜糖！採蜜失敗！");
+        finishMiniGame(false, 0);
+      }
+    }
+  }
+
   function finishMiniGame(success, reward = 2) {
+    forestMiniGameCount++; // 增加採蜜計數
     if (success) {
       if (gameMode === 'pvp') {
         if (gameState.activePlayer === 'p1') gameState.p1Honey += reward;
@@ -577,6 +619,8 @@
 
   /* --- 換回合與結算 --- */
   function finishTurn() {
+    forestMiniGameCount = 0; // 重置每回合小遊戲次數
+
     if (gameMode === 'story' && currentCountry.id === 'pinkbear' && gameState.round >= 5) {
       const emptyCells = gameState.grid.map((c, i) => c === null ? i : -1).filter(i => i !== -1);
       if (emptyCells.length > 0) {
@@ -644,8 +688,14 @@
         if (gameState.p1Score < 500) { passed = false; reason += `❌ 殘留 ${remaining} 個障礙物(扣${penalty}分)，未達 500 分！\n`; }
       }
 
-      statusEl.innerText = passed ? "🎉 拯救成功！成功完成拯救任務！" : "💥 拯救失敗！";
-      statusEl.style.color = passed ? "#388e3c" : "#d32f2f";
+      if (passed) {
+        markCountryPassed(currentCountry.id); // 記錄過關狀態
+        statusEl.innerText = "🎉 拯救成功！成功完成拯救任務！";
+        statusEl.style.color = "#388e3c";
+      } else {
+        statusEl.innerText = "💥 拯救失敗！";
+        statusEl.style.color = "#d32f2f";
+      }
       detailsEl.innerText = `最終合作總分：${gameState.p1Score} 分\n` + reason;
     }
   }
