@@ -3,392 +3,533 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>笑笑熊國：雙人對戰與故事拯救模式</title>
+  <title>笑笑熊國：領地爭霸與合作冒險</title>
   <style>
     :root {
       --bg-color: #fffaf0;
       --panel-bg: #ffffff;
       --p1-color: #ffb3ba;
+      --p1-dark: #f092a9;
       --p2-color: #bae1ff;
+      --p2-dark: #58c4b1;
       --accent-honey: #f6d365;
       --text-main: #5c4b51;
       --text-muted: #8c7b83;
-      --border-radius: 12px;
-      --shadow: 0 6px 16px rgba(92, 75, 81, 0.12);
+      --border-radius: 14px;
+      --shadow: 0 8px 20px rgba(92, 75, 81, 0.12);
     }
 
-    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", sans-serif; }
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Heiti TC", sans-serif; }
     body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
     #app { width: 100%; max-width: 650px; height: 100vh; max-height: 920px; display: flex; flex-direction: column; position: relative; background: var(--bg-color); box-shadow: var(--shadow); overflow: hidden; }
 
-    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 12px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
+    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 10px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
     .screen.active { display: flex; z-index: 2; }
 
-    h1 { font-size: 1.4rem; text-align: center; color: var(--text-main); margin-bottom: 4px; }
-    h2 { font-size: 1.1rem; text-align: center; margin-bottom: 6px; }
-    p { font-size: 0.8rem; line-height: 1.3; color: var(--text-muted); text-align: center; }
+    h1 { font-size: 1.5rem; text-align: center; color: var(--text-main); margin-bottom: 4px; }
+    h2 { font-size: 1.2rem; text-align: center; margin-bottom: 8px; }
+    p { font-size: 0.85rem; line-height: 1.4; color: var(--text-muted); text-align: center; }
 
     .btn {
       background: linear-gradient(135deg, var(--accent-honey), #fda085);
       border: none; color: #fff; padding: 10px 16px; font-size: 0.9rem; font-weight: bold;
-      border-radius: 18px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
       transition: transform 0.1s; text-align: center; margin: 4px 0; width: 100%;
     }
     .btn:active { transform: scale(0.96); }
-    .btn-action { font-size: 0.65rem; padding: 3px 6px; border-radius: 6px; border: none; cursor: pointer; }
+    .btn-redo { background: #ff9800; color: white; padding: 4px 8px; font-size: 0.72rem; border-radius: 8px; border:none; cursor:pointer; }
+    .btn-action { font-size: 0.65rem; padding: 3px 5px; border-radius: 6px; border: none; cursor: pointer; margin-top: 2px; }
+
+    #start-screen { justify-content: center; align-items: center; gap: 8px; }
+    .hero-icon { font-size: 3.5rem; }
+
+    #level-select-screen { justify-content: center; align-items: center; gap: 6px; }
+
+    #transition-screen { justify-content: center; align-items: center; text-align: center; background: rgba(255, 250, 240, 0.98); z-index: 10; }
+    .avatar-large { font-size: 4rem; margin: 10px 0; }
 
     .game-header { background: var(--panel-bg); padding: 6px 10px; border-radius: var(--border-radius); box-shadow: var(--shadow); display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
-    .stat-label { font-size: 0.6rem; color: var(--text-muted); }
-    .stat-value { font-size: 0.8rem; font-weight: bold; }
+    .stat-label { font-size: 0.65rem; color: var(--text-muted); }
+    .stat-value { font-size: 0.85rem; font-weight: bold; }
 
-    .event-banner { background: #e3f2fd; border: 1px solid #bbdefb; color: #0d47a1; padding: 4px 8px; border-radius: 8px; font-size: 0.68rem; margin-bottom: 4px; }
-
-    .grid-container { display: grid; grid-gap: 4px; background: var(--panel-bg); padding: 6px; border-radius: var(--border-radius); box-shadow: var(--shadow); aspect-ratio: 1; width: 100%; margin: 2px 0; }
-    .grid-4x4 { grid-template-columns: repeat(4, 1fr); }
-    .grid-6x6 { grid-template-columns: repeat(6, 1fr); }
-
-    .grid-cell { background: #f3efe6; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; cursor: pointer; position: relative; }
-    .grid-cell.p1-owner { background: var(--p1-color); }
-    .grid-cell.p2-owner { background: var(--p2-color); }
-    .grid-cell.lake { background: #f8bbd0; border: 1.5px solid #ec407a; }
-    .grid-cell.obstacle { background: #b0bec5; cursor: not-allowed; }
-
-    .action-panel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin: 4px 0; }
-    .action-btn { background: #fff; border: 1.5px solid #ffd54f; border-radius: 8px; padding: 8px; text-align: center; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-    .action-btn.disabled { opacity: 0.5; cursor: not-allowed; background: #eee; border-color: #ccc; }
+    .event-banner { background: #fff3cd; border: 1px solid #ffeba2; color: #856404; padding: 4px 8px; border-radius: 8px; font-size: 0.7rem; margin-bottom: 4px; text-align: center; }
 
     .card-hand { display: flex; gap: 4px; overflow-x: auto; padding: 2px 0; margin-bottom: 4px; }
     .card {
       background: var(--panel-bg); border: 2px solid #e2dcd5; border-radius: 8px;
-      padding: 4px; min-width: 80px; width: 80px; display: flex; flex-direction: column; align-items: center;
-      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; height: 110px; flex-shrink: 0;
+      padding: 4px; min-width: 82px; width: 82px; display: flex; flex-direction: column; align-items: center;
+      justify-content: space-between; box-shadow: var(--shadow); cursor: pointer; height: 125px; flex-shrink: 0;
     }
     .card.selected { border-color: #ff9800; background-color: #fff8e1; transform: translateY(-2px); }
+    .card.special { border-color: #9c27b0; background: #f3e5f5; }
+    .card-icon { font-size: 1.2rem; }
+    .card-title { font-size: 0.68rem; font-weight: bold; text-align: center; }
+    .card-desc { font-size: 0.55rem; color: var(--text-muted); text-align: center; line-height: 1.1; }
 
-    .modal-overlay { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; }
+    .grid-container { display: grid; grid-template-columns: repeat(7, 1fr); grid-gap: 3px; background: var(--panel-bg); padding: 4px; border-radius: var(--border-radius); box-shadow: var(--shadow); aspect-ratio: 1; width: 100%; margin: 2px 0; }
+    .grid-cell { background: #f3efe6; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 1.1rem; cursor: pointer; position: relative; transition: background 0.2s; }
+    .grid-cell.p1-owner { background: #ffe0e6; border: 1.5px solid var(--p1-dark); }
+    .grid-cell.p2-owner { background: #e1f5fe; border: 1.5px solid var(--p2-dark); }
+    .grid-cell.coop-owner { background: #e8f5e9; border: 1.5px solid #66bb6a; }
+    .grid-cell.obstacle { background: #dcd6cd; cursor: not-allowed; }
+    .grid-cell.water { background: #b2ebf2; cursor: not-allowed; }
+    .grid-cell.lake { background: #f8bbd0; cursor: not-allowed; }
+    .grid-cell.blocked { background: #ffe0b2; border: 1.5px dashed #f57c00; cursor: not-allowed; }
+
+    .log-box { background: rgba(255,255,255,0.85); border-radius: 8px; padding: 4px; font-size: 0.7rem; height: 35px; overflow-y: auto; border-left: 4px solid var(--accent-honey); }
+
+    .detail-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.72rem; }
+    .detail-table th, .detail-table td { border: 1px solid #eee; padding: 4px; text-align: center; }
+    .detail-table th { background: #f7f5f0; font-weight: bold; }
+
+    .modal-overlay { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
     .modal-overlay.active { display: flex; }
-    .modal-content { background: #fff; padding: 12px; border-radius: var(--border-radius); width: 92%; max-height: 85%; overflow-y: auto; }
-
-    /* 國家選關卡片（簡化版：僅顯示名稱與過關狀態） */
-    .country-select-card { background: #fff; border: 2px solid #ffe0b2; border-radius: 10px; padding: 12px; margin: 8px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-    .country-select-card:hover { border-color: #ff9800; background-color: #fffde7; }
-    .country-name { font-size: 1rem; font-weight: bold; color: #333; }
-    .country-status { font-size: 0.85rem; font-weight: bold; padding: 4px 8px; border-radius: 6px; }
-    .status-passed { background: #e8f5e9; color: #2e7d32; }
-    .status-unpassed { background: #ffebee; color: #c62828; }
-
-    .mini-game-board { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 8px 0; }
-    .mini-game-cell { background: #e0f2f1; border-radius: 4px; height: 35px; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-    .memory-card { background: #ffe0b2; border-radius: 6px; height: 50px; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; cursor: pointer; }
+    .modal-content { background: #fff; padding: 14px; border-radius: var(--border-radius); width: 90%; max-height: 85%; overflow-y: auto; }
+    
+    .weather-opt, .rename-opt { background: #f5f5f5; border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin: 6px 0; cursor: pointer; font-size: 0.9rem; text-align: center; font-weight: bold; }
+    .weather-opt:hover, .rename-opt:hover { background: #e0f7fa; border-color: #00bcd4; }
   </style>
 </head>
 <body>
 
 <div id="app">
-  <!-- 黑市彈窗 (故事模式專用) -->
-  <div id="blackmarket-modal" class="modal-overlay">
+  <!-- 改名獎勵彈窗 -->
+  <div id="rename-modal" class="modal-overlay">
     <div class="modal-content">
-      <h2>🖤 黑市交易</h2>
-      <p>可以使用蜜糖購買強力的特別卡牌：</p>
-      <div id="blackmarket-items" style="margin: 8px 0;"></div>
-      <button class="btn" onclick="closeModal('blackmarket-modal')">離開黑市</button>
+      <h2>🏆 勝利者的榮耀獎勵！</h2>
+      <p id="rename-title" style="margin-bottom:8px; font-weight:bold; color:#fda085;"></p>
+      <p style="margin-bottom:8px;">你可以為勝利角色選擇一個全新姓名，並記錄永久保存：</p>
+      <div id="rename-options"></div>
     </div>
   </div>
 
-  <!-- 森林小遊戲彈窗 (故事模式專用) -->
-  <div id="minigame-modal" class="modal-overlay">
-    <div class="modal-content" id="minigame-content"></div>
+  <!-- 天氣師彈窗 -->
+  <div id="weather-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>🌤️ 天氣師：控制下一局天氣</h2>
+      <p style="margin-bottom:8px;">請選擇下一局要生效的天氣：</p>
+      <div id="weather-options"></div>
+    </div>
   </div>
 
-  <!-- 開始主選單 -->
+  <!-- 玩法說明彈窗 -->
+  <div id="help-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>⚔️ 笑笑熊國：玩法與規則說明</h2>
+      <ul style="padding-left:16px; font-size:0.78rem; line-height:1.6; margin: 8px 0;">
+        <li><b>對戰模式</b>：共 <b>10 局回合</b>，輪流於 7x7 地圖放置建築得分，最終總分高者勝。第 8 局起隱藏即時分數！</li>
+        <li><b>合作冒險</b>：雙方<b>共享分數與蜜糖</b>，共進行 <b>12 局回合</b>，合力完成 5 大國家的專屬救援目標！</li>
+        <li><b>角色限制（合作）</b>：
+          <br>• 大頭狗國：小熊熊掛念細肥的，無法放置建築。
+          <br>• 粉紅熊國：毛巾豬心情低落，無法放置或休息。湖水會在第 5 局起蔓延！</li>
+        <li><b>固定蜜糖與重洗</b>：每局補充基礎 5 蜜糖；洗牌需花費 1 蜜糖。存卡區可儲存最多 4 張卡牌。</li>
+      </ul>
+      <button class="btn" onclick="toggleHelpModal(false)">我明白了！</button>
+    </div>
+  </div>
+
+  <!-- 開始畫面 -->
   <div id="start-screen" class="screen active">
-    <div style="font-size:3.5rem; text-align:center; margin-top:20px;">🐻🏰🐷</div>
-    <h1>笑笑熊國遊戲大廳</h1>
-    <p>請選擇遊戲模式：</p>
-    <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-      <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #ff6b6b);" onclick="startPvpGame()">⚔️ 雙人對戰模式 (原版 4x4)</button>
-      <button class="btn" style="background: linear-gradient(135deg, #81c784, #388e3c);" onclick="showCountrySelect()">📖 故事拯救模式 (2人合作 6x6)</button>
-    </div>
+    <div class="hero-icon">🐻🏰🐷</div>
+    <h1>笑笑熊國</h1>
+    <p>領地爭霸與合作冒險之旅</p>
+    <div style="height: 10px;"></div>
+    <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.05rem;" onclick="startVersusGame()">⚔️ 對戰模式 (領地爭霸)</button>
+    <button class="btn" style="background: linear-gradient(135deg, #81c784, #388e3c); width: 80%; font-size: 1.05rem;" onclick="showLevelSelect()">🤝 合作模式 (5國救援)</button>
+    <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 玩法說明</button>
   </div>
 
-  <!-- 故事模式：國家選擇 (僅顯示名字與過關狀態) -->
-  <div id="country-screen" class="screen">
-    <h2>🗺️ 選擇要拯救的國家</h2>
-    <div id="country-list"></div>
-    <button class="btn" style="background:#90a4ae;" onclick="switchScreen('start-screen')">⬅️ 返回主選單</button>
+  <!-- 關卡選擇 (合作模式) -->
+  <div id="level-select-screen" class="screen">
+    <h2>🤝 選擇救援國家</h2>
+    <p style="margin-bottom:8px;">請選擇你們要攜手救援的國家目標：</p>
+    <button class="btn" style="background:#ffb74d; width:85%;" onclick="startCoopGame(1)">🐾 1. 斑點狗國 (暴雨危機 - 10狗屋)</button>
+    <button class="btn" style="background:#4fc3f7; width:85%;" onclick="startCoopGame(2)">🐬 2. 海豚國 (圖書館計畫 - 相鄰配套)</button>
+    <button class="btn" style="background:#a1887f; width:85%;" onclick="startCoopGame(3)">🐶 3. 大頭狗國 (公園建設 - 3座大公園)</button>
+    <button class="btn" style="background:#f06292; width:85%;" onclick="startCoopGame(4)">🐻‍❄️ 4. 粉紅熊國 (湖水蔓延 - 圍湖綠化)</button>
+    <button class="btn" style="background:#90a4ae; width:85%;" onclick="startCoopGame(5)">🐧 5. 企鵝國 (炸毀障礙 - 爆破清理)</button>
+    <div style="height:10px;"></div>
+    <button class="btn" style="background:#e0e0e0; color:#333; width:60%;" onclick="switchScreen('start-screen')">返回主選單</button>
+  </div>
+
+  <!-- 換手畫面 -->
+  <div id="transition-screen" class="screen">
+    <h2 id="trans-title">請交接裝置</h2>
+    <div id="trans-avatar" class="avatar-large">🐻</div>
+    <p id="trans-msg">輪到小熊熊的回合了！</p>
+    <div style="flex:1"></div>
+    <button id="trans-btn" class="btn" onclick="completeTransition()">準備好了！</button>
   </div>
 
   <!-- 主遊戲畫面 -->
   <div id="game-screen" class="screen">
     <div class="game-header">
-      <div class="stat-box"><span class="stat-label">回合</span><span id="ui-round" class="stat-value">1/10</span></div>
-      <div class="stat-box"><span class="stat-label">當前玩家</span><span id="ui-player" class="stat-value">🐻 小熊熊</span></div>
+      <div class="stat-box"><span class="stat-label">局數</span><span id="ui-round" class="stat-value">1/10</span></div>
       <div class="stat-box"><span class="stat-label">蜜糖</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
-      <div class="stat-box"><span class="stat-label">分數</span><span id="ui-score" class="stat-value">✨ 0</span></div>
+      <div class="stat-box" id="box-p1-score"><span class="stat-label" id="label-p1-score">🐻 熊熊分</span><span id="ui-p1-score" class="stat-value">✨ 0</span></div>
+      <div class="stat-box" id="box-p2-score"><span class="stat-label" id="label-p2-score">🐷 毛豬分</span><span id="ui-p2-score" class="stat-value">✨ 0</span></div>
+      <div class="stat-box" id="box-coop-score" style="display:none;"><span class="stat-label">🤝 團隊總分</span><span id="ui-coop-score" class="stat-value">✨ 0</span></div>
+      <button class="btn-redo" id="redo-btn" onclick="redoAction()">↩️ Redo</button>
     </div>
 
-    <div id="ui-event-banner" class="event-banner">📢 遊戲進行中...</div>
+    <div id="ui-event-banner" class="event-banner">📢 天氣預報：載入中...</div>
 
-    <!-- 地圖 -->
-    <div class="grid-container grid-4x4" id="grid-container"></div>
+    <!-- 7x7 地圖 -->
+    <div class="grid-container" id="grid-container"></div>
 
-    <!-- 行動面板 -->
-    <div class="action-panel" id="action-panel">
-      <!-- 原版對戰按鈕與合作按鈕動態呈現 -->
+    <div style="display:flex; justify-space-between; align-items:center; margin-top:2px;">
+      <b style="font-size:0.75rem;">🎲 抽到的卡牌 (5張)：</b>
+      <button class="btn-action" id="refresh-btn" style="background:#ff9800; color:#fff;" onclick="refreshHand()">🔄 洗牌 (1🍯)</button>
     </div>
+    <div class="card-hand" id="drawn-hand"></div>
 
-    <div id="hand-section">
-      <b style="font-size:0.75rem;">🎴 當前手牌：</b>
-      <div class="card-hand" id="drawn-hand"></div>
-    </div>
+    <b style="font-size:0.75rem;">📥 庫存積累卡牌 (上限4張，已付費)：</b>
+    <div class="card-hand" id="stored-hand" style="min-height: 125px; background: #f5efe6; border-radius: 8px; padding:2px;"></div>
 
-    <div class="log-box" id="ui-log" style="font-size:0.7rem; background:#fff; padding:4px; border-radius:6px; min-height:35px; margin-bottom:2px;">請選擇行動！</div>
+    <div class="log-box" id="ui-log">請選擇卡牌放置於地圖上，或購買後存入庫存。</div>
     <div style="flex:1"></div>
-    <button class="btn" id="end-turn-btn" onclick="finishTurn()">完成行動 ➔ 切換回合</button>
+    <button class="btn" id="end-turn-btn" style="width:100%; margin-top:2px;" onclick="finishTurn()">結束本局回合 ➔</button>
   </div>
 
   <!-- 結算畫面 -->
   <div id="end-screen" class="screen">
-    <div style="font-size:3.5rem; text-align:center;" id="end-icon">🎉</div>
-    <h1 id="end-title">遊戲結算</h1>
-    <div style="font-size:1.3rem; font-weight:bold; text-align:center; margin:8px 0;" id="end-status">計算中...</div>
-    <div style="font-size:0.8rem; text-align:center; color:var(--text-muted); white-space:pre-line;" id="end-details"></div>
+    <div class="hero-icon" id="end-icon">👑</div>
+    <h1 id="end-title">笑笑熊國遊戲結束！</h1>
+    <div style="font-size:1.6rem; font-weight:bold; text-align:center; margin:4px 0; color:#fda085;" id="winner-display">計算中...</div>
+    <div style="font-size:0.75rem; text-align:center; color:var(--text-muted);" id="end-reason">順利完結</div>
+    
+    <div class="modal-content" id="end-stats" style="width:100%; box-shadow:none; background:#fff; margin-top:6px;"></div>
     <div style="flex:1"></div>
-    <button class="btn" onclick="switchScreen('start-screen')">返回主選單</button>
+    <button class="btn" onclick="location.reload()">再玩一局</button>
   </div>
 </div>
 
 <script>
-  let gameMode = 'pvp';
-  
-  // 原版雙人對戰模式建築與資料
-  const PVP_BUILDINGS = [
-    { id: 'house', name: '小熊屋', icon: '🏠', cost: 1, points: 10 },
-    { id: 'honey_factory', name: '蜜糖工廠', icon: '🏭', cost: 2, points: 25 },
-    { id: 'flower_garden', name: '花園', icon: '🌻', cost: 1, points: 15 },
-    { id: 'castle', name: '笑笑城堡', icon: '🏰', cost: 3, points: 50 }
+  let p1Name = localStorage.getItem('p1Name') || '小熊熊';
+  let p2Name = localStorage.getItem('p2Name') || '毛巾豬';
+
+  // 基礎對戰卡牌庫
+  const CARDS_VERSUS = [
+    { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 15, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
+    { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 12, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
+    { id: 'bath', name: '蜂蜜溫泉', icon: '♨️', cost: 3, weight: 10, points: 25, desc: '高分設施，臨水額外+15分。', type: 'build' },
+    { id: 'brick', name: '鐵壁磚牆', icon: '🧱', cost: 2, weight: 12, points: 5, desc: '超強防風，極難被吹走。', type: 'build' },
+    { id: 'windmill', name: '風車發電機', icon: '🌪️', cost: 2, weight: 10, points: 15, desc: '每局額外+1蜂蜜。', type: 'build' },
+    { id: 'balloon', name: '觀光熱氣球', icon: '🎈', cost: 4, weight: 8, points: 40, desc: '極高分數，但重量負數！', type: 'build' },
+    { id: 'towel_office', name: '毛巾局', icon: '🏢', cost: 4, weight: 8, points: 50, desc: '吸引笑笑熊回國！需佔用相鄰 2 格！', type: 'build_large', size: 2 },
+
+    { id: 'allowance', name: '零用錢', icon: '🪙', cost: 0, weight: 3, points: 0, desc: '【特別卡】下一局可額外獲得 5 個蜜糖！', type: 'special_allowance' },
+    { id: 'caprice', name: '任性一下', icon: '😤', cost: 0, weight: 8, points: 0, desc: '【特別卡】下一局獲得免費洗牌 1 次！', type: 'special_caprice' },
+    { id: 'visit', name: '朋友探訪', icon: '👋', cost: 1, weight: 8, points: 0, desc: '【特別卡】下一局封鎖 1 格使對方無法放置！', type: 'special_visit' },
+    { id: 'bomb', name: '炸彈卡', icon: '💣', cost: 2, weight: 6, points: 0, desc: '【特別卡】直接炸毀地圖上任意設施或障礙！', type: 'special_bomb' },
+    { id: 'party', name: '笑笑熊聚會', icon: '🎉', cost: 3, weight: 2, points: 0, desc: '【特別卡】指定對方下一局只能儲卡，不能放卡！', type: 'special_party' },
+    { id: 'weather', name: '天氣師', icon: '🌤️', cost: 2, weight: 5, points: 0, desc: '【特別卡】自由控制下一局的全場天氣！', type: 'special_weather' }
   ];
 
-  // 合作拯救模式國家資料
-  const COUNTRIES = [
-    {
-      id: 'dalmatian', name: '1. 斑點狗國 🐶',
-      desc: '任務：蓋滿 10 個斑點狗屋、分數達 400 分。\n限制：暴雨時建屋有機率失敗！',
-      targetScore: 400, targetHouses: 10,
-      buildings: [
-        { id: 'dal_house', name: '斑點狗屋', icon: '🐶', cost: 1, points: 25 },
-        { id: 'park', name: '狗狗公園', icon: '🛝', cost: 2, points: 30 }
-      ]
-    },
-    {
-      id: 'dolphin', name: '2. 海豚國 🐬',
-      desc: '任務：每個海豚屋附近必須有圖書館、分數達 450 分。\n限制：小熊熊怕水，放置卡牌有 25% 機率失敗！',
-      targetScore: 450,
-      buildings: [
-        { id: 'dol_house', name: '海豚屋', icon: '🐬', cost: 2, points: 35 },
-        { id: 'library', name: '圖書館', icon: '📚', cost: 2, points: 20 }
-      ]
-    },
-    {
-      id: 'bigdog', name: '3. 大頭狗國 🐶❤️',
-      desc: '任務：建立 3 個公園、分數達 450 分。\n限制：小熊熊想念細肥的，只能「購買卡牌/黑市交易」！',
-      targetScore: 450,
-      buildings: [
-        { id: 'big_park', name: '大頭公園', icon: '🌲', cost: 3, points: 50 }
-      ]
-    },
-    {
-      id: 'pinkbear', name: '4. 粉紅熊國 🐻🌸',
-      desc: '任務：包圍粉紅湖，第 5 局起湖水每局擴展（每格扣 20 分），分數達 450 分。\n限制：毛巾豬心情低落，不能放置建築與採蜜！',
-      targetScore: 450,
-      buildings: [
-        { id: 'pink_tree', name: '粉紅樹木', icon: '🌲', cost: 1, points: 15 }
-      ]
-    },
-    {
-      id: 'penguin', name: '5. 企鵝國 🐧❄️',
-      desc: '任務：炸毀全部 5 個障礙物（殘留扣分）、分數達 500 分。\n限制：小熊熊被誤認，手牌上限縮減至 3 張！',
-      targetScore: 500,
-      buildings: [
-        { id: 'ice_house', name: '冰屋', icon: '🧊', cost: 2, points: 40 }
-      ]
-    }
+  // 合作專屬建築卡
+  const CARD_DALMATIAN = { id: 'dalmatian_house', name: '斑點狗屋', icon: '🐾', cost: 3, weight: 15, points: 40, desc: '斑點狗國救援專用設施。', type: 'build' };
+  const CARD_DOLPHIN = { id: 'dolphin_house', name: '海豚屋', icon: '🐬', cost: 4, weight: 12, points: 40, desc: '海豚國救援專用設施。', type: 'build' };
+  const CARD_LIBRARY = { id: 'library', name: '圖書館', icon: '📚', cost: 3, weight: 12, points: 20, desc: '配合海豚屋興建以完成計畫！', type: 'build' };
+  const CARD_PARK = { id: 'park', name: '大頭狗公園', icon: '🛝', cost: 6, weight: 12, points: 100, desc: '需佔用橫向連續 3 格！', type: 'build_park', size: 3 };
+
+  const WEATHER_LIST = [
+    { id: 'sun', name: "☀️ 晴空萬里", desc: "平安無事，適合擴建領地。", effect: 'none' },
+    { id: 'storm', name: "🌪️ 突發暴風", desc: "重量不足 15 且無保護的設施容易毀壞！", effect: 'storm' },
+    { id: 'rain', name: "🌧️ 連綿豪雨", desc: "所有溫泉與水邊設施分數即時 +10 分！", effect: 'rain' },
+    { id: 'lightning', name: "⚡ 狂暴雷電", desc: "隨機砸中一格毀壞該設施！", effect: 'lightning' },
+    { id: 'heat', name: "🌋 地熱復甦", desc: "周圍有障礙物(🪨)的設施額外 +10 分！", effect: 'heat' },
+    { id: 'freeze', name: "❄️ 寒冬霜凍", desc: "本局所有卡牌蜂蜜消耗 -1 (最低 0)！", effect: 'freeze' }
   ];
 
-  let currentCountry = null;
-  let forestMiniGameCount = 0; // 合作模式每回合小遊戲次數 (最多 2 次)
+  let gameMode = 'versus'; // 'versus' or 'coop'
+  let currentCoopLevel = 1;
 
   let gameState = {
     round: 1, maxRounds: 10,
     activePlayer: 'p1',
-    p1Honey: 5, p2Honey: 5,
-    p1Score: 0, p2Score: 0,
-    grid: [], hand: [],
-    selectedIndex: -1,
-    dalmatianHouses: 0,
-    lakeExpandCount: 0
+    p1Honey: 5, p2Honey: 5, coopHoney: 10,
+    p1Score: 0, p2Score: 0, coopScore: 0,
+    p1Stored: [], p2Stored: [], coopStored: [],
+    p1BonusHoneyNext: 0, p2BonusHoneyNext: 0, coopBonusHoneyNext: 0,
+    p1FreeRefreshNext: false, p2FreeRefreshNext: false, coopFreeRefreshNext: false,
+    drawnCards: [],
+    selectedCard: null, selectedCardSource: null, selectedCardIndex: -1,
+    currentWeather: null, forcedNextWeather: null,
+    p1PartyLocked: false, p2PartyLocked: false,
+    grid: Array(49).fill(null),
+    historyStack: [],
+    p1BuildStats: {}, p2BuildStats: {}, coopBuildStats: {}
   };
 
-  function switchScreen(id) {
+  let nextTransitionCallback = null;
+
+  function toggleHelpModal(show) { document.getElementById('help-modal').classList.toggle('active', show); }
+  function showLevelSelect() { switchScreen('level-select-screen'); }
+
+  function switchScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    document.getElementById(screenId).classList.add('active');
   }
 
-  function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
-  }
-
-  /* --- 國家過關狀態記錄 --- */
-  function getPassedCountries() {
-    return JSON.parse(localStorage.getItem('passed_countries') || '{}');
-  }
-
-  function markCountryPassed(id) {
-    const passed = getPassedCountries();
-    passed[id] = true;
-    localStorage.setItem('passed_countries', JSON.stringify(passed));
-  }
-
-  /* --- 合作模式：關卡選擇清單 (僅顯示名稱與過關狀態) --- */
-  function showCountrySelect() {
-    switchScreen('country-screen');
-    const container = document.getElementById('country-list');
-    container.innerHTML = '';
-    const passedMap = getPassedCountries();
-
-    COUNTRIES.forEach(c => {
-      const isPassed = !!passedMap[c.id];
-      const card = document.createElement('div');
-      card.className = 'country-select-card';
-      card.innerHTML = `
-        <span class="country-name">${c.name}</span>
-        <span class="country-status ${isPassed ? 'status-passed' : 'status-unpassed'}">
-          ${isPassed ? '✅ 已通關' : '❌ 未通關'}
-        </span>
-      `;
-      card.onclick = () => startStoryGame(c);
-      container.appendChild(card);
-    });
-  }
-
-  /* --- 原版對戰模式初始化 --- */
-  function startPvpGame() {
-    gameMode = 'pvp';
-    gameState.round = 1;
+  function startVersusGame() {
+    gameMode = 'versus';
     gameState.maxRounds = 10;
-    gameState.activePlayer = 'p1';
-    gameState.p1Honey = 5;
-    gameState.p2Honey = 5;
-    gameState.p1Score = 0;
-    gameState.p2Score = 0;
-    gameState.grid = Array(16).fill(null);
-    gameState.selectedIndex = -1;
+    initGameState();
 
-    // 渲染對戰原版行動按鈕
-    const panel = document.getElementById('action-panel');
-    panel.innerHTML = `
-      <div class="action-btn" onclick="pvpGatherHoney()">🍯 採集蜜糖 (+2蜜糖)</div>
-      <div class="action-btn" onclick="pvpDrawCards()">🎲 洗牌/換牌 (1蜜糖)</div>
-    `;
+    const obstacles = [3, 10, 16, 24, 32, 38, 45];
+    const waters = [11, 12, 17, 31, 36, 37];
+    obstacles.forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
+    waters.forEach(i => gameState.grid[i] = { type: 'water', icon: '🌊' });
 
-    drawCards(4);
-    document.getElementById('grid-container').className = "grid-container grid-4x4";
-    switchScreen('game-screen');
-    updateUI();
+    switchScreen('transition-screen');
+    setupTransition("笑笑熊國領地爭霸！", "🐻", `${p1Name} (P1) 的回合！`, "btn", () => startTurn());
   }
 
-  /* --- 合作拯救模式初始化 --- */
-  function startStoryGame(country) {
-    gameMode = 'story';
-    currentCountry = country;
-    gameState.round = 1;
+  function startCoopGame(level) {
+    gameMode = 'coop';
+    currentCoopLevel = level;
     gameState.maxRounds = 12;
-    gameState.activePlayer = 'p1';
-    gameState.p1Honey = 5;
-    gameState.p1Score = 0;
-    gameState.grid = Array(36).fill(null);
-    gameState.dalmatianHouses = 0;
-    gameState.lakeExpandCount = 0;
-    gameState.selectedIndex = -1;
-    forestMiniGameCount = 0;
+    initGameState();
 
-    // 渲染合作模式行動按鈕
-    const panel = document.getElementById('action-panel');
-    panel.innerHTML = `
-      <div class="action-btn" id="btn-act-build">🏠 放置建築物</div>
-      <div class="action-btn" id="btn-act-forest" onclick="selectAction('forest')">🌲 森林採蜜 (小遊戲)</div>
-      <div class="action-btn" id="btn-act-blackmarket" onclick="selectAction('blackmarket')">🖤 黑市交易</div>
-      <div class="action-btn" id="btn-act-cards" onclick="selectAction('cards')">🎲 抽卡/洗牌 (1🍯)</div>
-    `;
-
-    if (country.id === 'pinkbear') {
-      [14, 15, 20, 21].forEach(i => gameState.grid[i] = { type: 'lake', name: '粉紅湖', icon: '🌸' });
-    } else if (country.id === 'penguin') {
-      [2, 11, 20, 27, 33].forEach(i => gameState.grid[i] = { type: 'obstacle', name: '冰塊障礙', icon: '🧊' });
-    }
-
-    drawCards(country.id === 'penguin' ? 3 : 5);
-    document.getElementById('grid-container').className = "grid-container grid-6x6";
-    switchScreen('game-screen');
-    updateUI();
-  }
-
-  /* --- 抽牌機制 --- */
-  function drawCards(count) {
-    gameState.hand = [];
-    const pool = gameMode === 'pvp' ? PVP_BUILDINGS : currentCountry.buildings;
-    for (let i = 0; i < count; i++) {
-      const b = pool[Math.floor(Math.random() * pool.length)];
-      gameState.hand.push({ ...b });
-    }
-  }
-
-  /* --- 原版對戰獨有行動 --- */
-  function pvpGatherHoney() {
-    if (gameState.activePlayer === 'p1') gameState.p1Honey += 2;
-    else gameState.p2Honey += 2;
-    document.getElementById('ui-log').innerText = "🍯 成功採集 2 個蜜糖！";
-    updateUI();
-  }
-
-  function pvpDrawCards() {
-    let curHoney = gameState.activePlayer === 'p1' ? gameState.p1Honey : gameState.p2Honey;
-    if (curHoney < 1) { alert("蜜糖不足！"); return; }
-    if (gameState.activePlayer === 'p1') gameState.p1Honey--;
-    else gameState.p2Honey--;
-    drawCards(4);
-    document.getElementById('ui-log').innerText = "🎲 成功更換手牌！";
-    updateUI();
-  }
-
-  /* --- UI 畫面更新 --- */
-  function updateUI() {
-    const isP1 = gameState.activePlayer === 'p1';
-    document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
-    document.getElementById('ui-player').innerText = isP1 ? '🐻 小熊熊' : '🐷 毛巾豬';
-
-    if (gameMode === 'pvp') {
-      document.getElementById('ui-honey').innerText = `🍯 ${isP1 ? gameState.p1Honey : gameState.p2Honey}`;
-      document.getElementById('ui-score').innerText = `✨ P1:${gameState.p1Score} | P2:${gameState.p2Score}`;
-      document.getElementById('ui-event-banner').innerText = `⚔️ 雙人對戰模式：佔領 4x4 領地，爭奪最高分數！`;
+    // 合作國地圖初始化
+    if (level === 4) {
+      // 粉紅熊國：中央設置 2x2 粉紅湖
+      [17, 18, 24, 25].forEach(i => gameState.grid[i] = { type: 'lake', icon: '💗' });
+    } else if (level === 5) {
+      // 企鵝國：放置 5 個障礙物
+      [10, 16, 24, 32, 38].forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
     } else {
-      document.getElementById('ui-honey').innerText = `🍯 ${gameState.p1Honey}`;
-      document.getElementById('ui-score').innerText = `✨ ${gameState.p1Score}`;
-      document.getElementById('ui-event-banner').innerText = `📢 【${currentCountry.name}】採蜜限制：每局最多 ${forestMiniGameCount}/2 次`;
+      [10, 16, 32, 38].forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
+    }
 
-      const btnForest = document.getElementById('btn-act-forest');
-      if (btnForest) {
-        if (currentCountry.id === 'pinkbear' && !isP1) {
-          btnForest.classList.add('disabled');
-        } else {
-          btnForest.classList.remove('disabled');
+    const levelTitles = [
+      "", "🐾 斑點狗國 (暴雨危機)", "🐬 海豚國 (圖書館計畫)", 
+      "🐶 大頭狗國 (公園建設)", "🐻‍❄️ 粉紅熊國 (湖水蔓延)", "🐧 企鵝國 (炸毀障礙)"
+    ];
+
+    switchScreen('transition-screen');
+    setupTransition(`合作冒險：${levelTitles[level]}`, "🐻", `與 ${p2Name} 攜手合作！${p1Name} 先開局！`, "btn", () => startTurn());
+  }
+
+  function initGameState() {
+    gameState.round = 1; gameState.activePlayer = 'p1';
+    gameState.p1Honey = 5; gameState.p2Honey = 5; gameState.coopHoney = 10;
+    gameState.p1Score = 0; gameState.p2Score = 0; gameState.coopScore = 0;
+    gameState.p1Stored = []; gameState.p2Stored = []; gameState.coopStored = [];
+    gameState.p1BonusHoneyNext = 0; gameState.p2BonusHoneyNext = 0; gameState.coopBonusHoneyNext = 0;
+    gameState.p1FreeRefreshNext = false; gameState.p2FreeRefreshNext = false; gameState.coopFreeRefreshNext = false;
+    gameState.grid = Array(49).fill(null);
+    gameState.p1BuildStats = {}; gameState.p2BuildStats = {}; gameState.coopBuildStats = {};
+    gameState.forcedNextWeather = null;
+    gameState.p1PartyLocked = false; gameState.p2PartyLocked = false;
+  }
+
+  function setupTransition(title, avatar, msg, btnClass, callback) {
+    document.getElementById('trans-title').innerText = title;
+    document.getElementById('trans-avatar').innerText = avatar;
+    document.getElementById('trans-msg').innerText = msg;
+    const btn = document.getElementById('trans-btn');
+    btn.className = `btn ${btnClass}`;
+    btn.style.background = gameState.activePlayer === 'p1' ? 'linear-gradient(135deg, #ffb3ba, #f092a9)' : 'linear-gradient(135deg, #bae1ff, #58c4b1)';
+    nextTransitionCallback = callback;
+  }
+
+  function completeTransition() { if (nextTransitionCallback) nextTransitionCallback(); }
+
+  /* --- 回合發動 --- */
+  function startTurn() {
+    switchScreen('game-screen');
+    gameState.selectedCard = null;
+    gameState.historyStack = [];
+
+    // 解封過期封鎖格
+    gameState.grid.forEach((cell, i) => {
+      if (cell && cell.type === 'blocked') {
+        if (cell.blockedFor === gameState.activePlayer) {
+          if (cell.turnsLeft === undefined) cell.turnsLeft = 1;
+          else gameState.grid[i] = null;
         }
       }
+    });
+
+    if (gameState.forcedNextWeather) {
+      gameState.currentWeather = gameState.forcedNextWeather;
+      gameState.forcedNextWeather = null;
+    } else if (gameState.activePlayer === 'p1') {
+      gameState.currentWeather = WEATHER_LIST[Math.floor(Math.random() * WEATHER_LIST.length)];
     }
 
+    // 粉紅熊國湖水蔓延邏輯 (第 5 局起)
+    if (gameMode === 'coop' && currentCoopLevel === 4 && gameState.round >= 5 && gameState.activePlayer === 'p1') {
+      expandLake();
+    }
+
+    if (gameMode === 'versus') {
+      const isP1 = gameState.activePlayer === 'p1';
+      let p1Territory = 0, p2Territory = 0;
+      gameState.grid.forEach(c => {
+        if (c && c.owner === 'p1') p1Territory++;
+        if (c && c.owner === 'p2') p2Territory++;
+      });
+
+      let territoryBonus = (isP1 && p1Territory >= p2Territory && p1Territory > 0) || (!isP1 && p2Territory >= p1Territory && p2Territory > 0) ? 1 : 0;
+      let windmillBonus = 0;
+      gameState.grid.forEach(c => { if(c && c.id === 'windmill' && c.owner === gameState.activePlayer) windmillBonus++; });
+
+      let bonusHoney = isP1 ? gameState.p1BonusHoneyNext : gameState.p2BonusHoneyNext;
+      if (isP1) gameState.p1BonusHoneyNext = 0; else gameState.p2BonusHoneyNext = 0;
+
+      const totalHoney = 5 + territoryBonus + windmillBonus + bonusHoney;
+      if (isP1) gameState.p1Honey = totalHoney; else gameState.p2Honey = totalHoney;
+    } else {
+      // 合作模式共享蜜糖
+      let bonusHoney = gameState.coopBonusHoneyNext;
+      gameState.coopBonusHoneyNext = 0;
+      gameState.coopHoney += 5 + bonusHoney;
+    }
+
+    drawFiveCards();
+    updateUI();
+  }
+
+  function expandLake() {
+    let candidateIndices = [];
+    gameState.grid.forEach((cell, idx) => {
+      if (cell && cell.type === 'lake') {
+        const adj = getAdjacentIndices(idx);
+        adj.forEach(aIdx => {
+          if (gameState.grid[aIdx] === null) candidateIndices.push(aIdx);
+        });
+      }
+    });
+
+    if (candidateIndices.length > 0) {
+      const pickIdx = candidateIndices[Math.floor(Math.random() * candidateIndices.length)];
+      gameState.grid[pickIdx] = { type: 'lake', icon: '💗' };
+      alert("⚠️ 警告：粉紅熊國的湖水向外蔓延了一格！");
+    }
+  }
+
+  function getAvailableCardsPool() {
+    if (gameMode === 'versus') return CARDS_VERSUS;
+
+    let pool = [...CARDS_VERSUS];
+    if (currentCoopLevel === 1) pool.push(CARD_DALMATIAN);
+    if (currentCoopLevel === 2) pool.push(CARD_DOLPHIN, CARD_LIBRARY);
+    if (currentCoopLevel === 3) pool.push(CARD_PARK);
+    if (currentCoopLevel === 5) {
+      // 企鵝國：限定牌庫
+      pool = [CARDS_VERSUS[0], CARDS_VERSUS[1], CARDS_VERSUS[10]]; // 小屋, 樹木, 炸彈
+    }
+    return pool;
+  }
+
+  function getRandomCardByWeight() {
+    const pool = getAvailableCardsPool();
+    const totalWeight = pool.reduce((sum, card) => sum + card.weight, 0);
+    let randomNum = Math.random() * totalWeight;
+    for (let card of pool) {
+      if (randomNum < card.weight) return card;
+      randomNum -= card.weight;
+    }
+    return pool[0];
+  }
+
+  function drawFiveCards() {
+    gameState.drawnCards = [];
+    for (let i = 0; i < 5; i++) {
+      gameState.drawnCards.push(getRandomCardByWeight());
+    }
+  }
+
+  function refreshHand() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const hasFree = gameMode === 'versus' 
+      ? (isP1 ? gameState.p1FreeRefreshNext : gameState.p2FreeRefreshNext)
+      : gameState.coopFreeRefreshNext;
+
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (!hasFree && currentHoney < 1) {
+      alert("蜜糖不足 1 個，無法重新洗牌！");
+      return;
+    }
+
+    saveHistoryState();
+
+    if (hasFree) {
+      if (gameMode === 'versus') {
+        if (isP1) gameState.p1FreeRefreshNext = false; else gameState.p2FreeRefreshNext = false;
+      } else gameState.coopFreeRefreshNext = false;
+      document.getElementById('ui-log').innerText = "😤 使用「任性一下」特權，本次洗牌免費！";
+    } else {
+      deductHoney(1);
+      document.getElementById('ui-log').innerText = "🔄 已花費 1 蜜糖重新洗牌！";
+    }
+
+    drawFiveCards();
+    gameState.selectedCard = null;
+    updateUI();
+  }
+
+  function updateUI() {
+    const isP1 = gameState.activePlayer === 'p1';
+    
+    const endBtn = document.getElementById('end-turn-btn');
+    endBtn.style.background = isP1 ? 'linear-gradient(135deg, #ffb3ba, #f092a9)' : 'linear-gradient(135deg, #bae1ff, #58c4b1)';
+
+    document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
+    document.getElementById('ui-honey').innerText = `🍯 ${gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney}`;
+    
+    if (gameMode === 'versus') {
+      document.getElementById('box-p1-score').style.display = 'flex';
+      document.getElementById('box-p2-score').style.display = 'flex';
+      document.getElementById('box-coop-score').style.display = 'none';
+
+      document.getElementById('label-p1-score').innerText = `🐻 ${p1Name}分`;
+      document.getElementById('label-p2-score').innerText = `🐷 毛豬分`;
+
+      if (gameState.round <= 7) {
+        document.getElementById('ui-p1-score').innerText = `✨ ${gameState.p1Score}`;
+        document.getElementById('ui-p2-score').innerText = `✨ ${gameState.p2Score}`;
+      } else {
+        document.getElementById('ui-p1-score').innerText = `🔒 隱藏`;
+        document.getElementById('ui-p2-score').innerText = `🔒 隱藏`;
+      }
+    } else {
+      document.getElementById('box-p1-score').style.display = 'none';
+      document.getElementById('box-p2-score').style.display = 'none';
+      document.getElementById('box-coop-score').style.display = 'flex';
+      document.getElementById('ui-coop-score').innerText = `✨ ${gameState.coopScore}`;
+    }
+
+    const hasFreeRefresh = gameMode === 'versus' ? (isP1 ? gameState.p1FreeRefreshNext : gameState.p2FreeRefreshNext) : gameState.coopFreeRefreshNext;
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (hasFreeRefresh) {
+      refreshBtn.innerText = "😤 免費洗牌";
+      refreshBtn.style.background = "#e91e63";
+    } else {
+      refreshBtn.innerText = "🔄 洗牌 (1🍯)";
+      refreshBtn.style.background = "#ff9800";
+    }
+
+    let roleRestrictionMsg = "";
+    if (gameMode === 'coop') {
+      if (currentCoopLevel === 3 && isP1) roleRestrictionMsg = " | ⚠️ 小熊熊掛念細肥的：本局無法放置建築！";
+      if (currentCoopLevel === 4 && !isP1) roleRestrictionMsg = " | ⚠️ 毛巾豬心情低落：本局無法放置建築與休息！";
+    }
+
+    const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
+    document.getElementById('ui-event-banner').innerText = `📢 天氣：${gameState.currentWeather.name}${isLocked ? ' | 🎉 受聚會影響：無法放置建築！' : ''}${roleRestrictionMsg}`;
+
+    document.getElementById('redo-btn').style.display = gameState.historyStack.length > 0 ? 'block' : 'none';
+
     renderGrid();
-    renderHand();
+    renderHand('drawn-hand', gameState.drawnCards, 'drawn');
+    
+    const storedList = gameMode === 'versus' ? (isP1 ? gameState.p1Stored : gameState.p2Stored) : gameState.coopStored;
+    renderHand('stored-hand', storedList, 'stored');
   }
 
   function renderGrid() {
@@ -401,8 +542,8 @@
       if (cell) {
         if (cell.owner === 'p1') cellEl.classList.add('p1-owner');
         if (cell.owner === 'p2') cellEl.classList.add('p2-owner');
-        if (cell.type === 'lake') cellEl.classList.add('lake');
-        if (cell.type === 'obstacle') cellEl.classList.add('obstacle');
+        if (cell.owner === 'coop') cellEl.classList.add('coop-owner');
+        if (cell.type) cellEl.classList.add(cell.type);
         cellEl.innerText = cell.icon || '';
       }
       cellEl.onclick = () => handleCellClick(idx);
@@ -410,312 +551,623 @@
     });
   }
 
-  function renderHand() {
-    const container = document.getElementById('drawn-hand');
+  function renderHand(containerId, cardArray, sourceType) {
+    const container = document.getElementById(containerId);
     container.innerHTML = '';
 
-    gameState.hand.forEach((card, idx) => {
+    cardArray.forEach((card, idx) => {
       const cardEl = document.createElement('div');
-      const isSelected = gameState.selectedIndex === idx;
-      cardEl.className = `card ${isSelected ? 'selected' : ''}`;
+      const isSelected = gameState.selectedCardSource === sourceType && gameState.selectedCardIndex === idx;
+      
+      cardEl.className = `card ${card.type.includes('special') ? 'special' : ''} ${isSelected ? 'selected' : ''}`;
+      const originalCost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+      const scoreBadge = card.points > 0 ? `<div style="font-size:0.6rem; color:#e65100; font-weight:bold;">✨ ${card.points}分</div>` : '';
+
       cardEl.innerHTML = `
-        <div style="font-size:1.2rem;">${card.icon}</div>
-        <div style="font-size:0.65rem; font-weight:bold;">${card.name}</div>
-        <div style="font-size:0.6rem; color:#f57c00;">🍯 ${card.cost}</div>
-        <div style="font-size:0.55rem; color:#e65100;">✨ ${card.points}分</div>
-        <button class="btn-action" style="background:#ffd54f;" onclick="selectCard(${idx})">${isSelected ? '取消' : '選擇'}</button>
+        <div class="card-icon">${card.icon}</div>
+        <div class="card-title">${card.name}</div>
+        <div style="font-size:0.6rem; font-weight:bold;">${sourceType === 'drawn' ? '🍯 ' + originalCost : '✅ 已購買'}</div>
+        ${scoreBadge}
+        <div class="card-desc">${card.desc}</div>
+        <div>
+          ${sourceType === 'drawn' ? `<button class="btn-action" style="background:#81c784; color:#fff;" onclick="storeCard(event, ${idx})">📥 存卡</button>` : ''}
+          <button class="btn-action" style="background:#ffd54f;" onclick="selectCard(event, '${sourceType}', ${idx})">${isSelected ? '取消' : '選擇'}</button>
+        </div>
       `;
       container.appendChild(cardEl);
     });
   }
 
-  function selectCard(idx) {
-    gameState.selectedIndex = gameState.selectedIndex === idx ? -1 : idx;
-    renderHand();
+  function storeCard(e, index) {
+    e.stopPropagation();
+    const isP1 = gameState.activePlayer === 'p1';
+    const storedList = gameMode === 'versus' ? (isP1 ? gameState.p1Stored : gameState.p2Stored) : gameState.coopStored;
+    
+    if (storedList.length >= 4) {
+      alert("庫存區已滿（上限 4 張）！");
+      return;
+    }
+
+    const card = gameState.drawnCards[index];
+    const cost = gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (currentHoney < cost) {
+      alert(`蜜糖不足，無法花費 🍯 ${cost} 購買此卡存入庫存！`);
+      return;
+    }
+
+    saveHistoryState();
+    deductHoney(cost);
+    const removedCard = gameState.drawnCards.splice(index, 1)[0];
+    storedList.push(removedCard);
+    
+    gameState.selectedCard = null;
+    gameState.selectedCardSource = null;
+    gameState.selectedCardIndex = -1;
+
+    document.getElementById('ui-log').innerText = `📥 花費 🍯 ${cost} 購買了 ${card.name} 並存入庫存！`;
+    updateUI();
   }
 
-  /* --- 合作模式專用行動觸發 --- */
-  function selectAction(type) {
-    const isP1 = gameState.activePlayer === 'p1';
+  function selectCard(e, sourceType, index) {
+    e.stopPropagation();
+    if (gameState.selectedCardSource === sourceType && gameState.selectedCardIndex === index) {
+      gameState.selectedCard = null;
+      gameState.selectedCardSource = null;
+      gameState.selectedCardIndex = -1;
+    } else {
+      const storedList = gameMode === 'versus' ? (gameState.activePlayer === 'p1' ? gameState.p1Stored : gameState.p2Stored) : gameState.coopStored;
+      const sourceArray = sourceType === 'drawn' ? gameState.drawnCards : storedList;
+      
+      gameState.selectedCard = sourceArray[index];
+      gameState.selectedCardSource = sourceType;
+      gameState.selectedCardIndex = index;
 
-    if (type === 'forest') {
-      if (forestMiniGameCount >= 2) {
-        alert("⚠️ 本局森林採蜜小遊戲次數已達上限 (最多 2 次)！");
+      if (gameState.selectedCard.id === 'allowance') {
+        useAllowanceCard();
+        return;
+      } else if (gameState.selectedCard.id === 'caprice') {
+        useCapriceCard();
+        return;
+      } else if (gameState.selectedCard.id === 'party') {
+        usePartyCard();
+        return;
+      } else if (gameState.selectedCard.id === 'weather') {
+        useWeatherCard();
         return;
       }
-      if (gameMode === 'story' && currentCountry.id === 'pinkbear' && !isP1) {
-        alert("毛巾豬心情低落，無法前往森林！");
+    }
+    updateUI();
+  }
+
+  function useAllowanceCard() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost) : 0;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (currentHoney < cost) { alert("蜜糖不足！"); return; }
+
+    saveHistoryState();
+    deductHoney(cost);
+
+    if (gameMode === 'versus') {
+      if (isP1) gameState.p1BonusHoneyNext += 5; else gameState.p2BonusHoneyNext += 5;
+    } else {
+      gameState.coopBonusHoneyNext += 5;
+    }
+
+    consumeSelectedCard();
+    alert("🪙 獲得零用錢！下一局將會額外獲得 5 個蜜糖！");
+    updateUI();
+  }
+
+  function useCapriceCard() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost) : 0;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (currentHoney < cost) { alert("蜜糖不足！"); return; }
+
+    saveHistoryState();
+    deductHoney(cost);
+
+    if (gameMode === 'versus') {
+      if (isP1) gameState.p1FreeRefreshNext = true; else gameState.p2FreeRefreshNext = true;
+    } else {
+      gameState.coopFreeRefreshNext = true;
+    }
+
+    consumeSelectedCard();
+    alert("😤 任性一下發動！下一局獲得免費洗牌 1 次特權！");
+    updateUI();
+  }
+
+  function handleCellClick(index) {
+    if (!gameState.selectedCard) {
+      document.getElementById('ui-log').innerText = "請先從手牌選擇一張要放置或使用的卡牌！";
+      return;
+    }
+
+    const isP1 = gameState.activePlayer === 'p1';
+    
+    // 角色限制檢查 (合作模式)
+    if (gameMode === 'coop') {
+      if (currentCoopLevel === 3 && isP1) { alert("⚠️ 小熊熊掛念細肥的，大頭狗國全場無法放置建築！"); return; }
+      if (currentCoopLevel === 4 && !isP1) { alert("⚠️ 毛巾豬心情低落，粉紅熊國全場無法放置建築！"); return; }
+    }
+
+    const isLocked = isP1 ? gameState.p1PartyLocked : gameState.p2PartyLocked;
+    if (isLocked) { alert("🎉 你受到笑笑熊聚會影響，本局無法放置建築！"); return; }
+
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost) : 0;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (currentHoney < cost) { alert("蜜糖不足，無法使用此卡牌！"); return; }
+
+    const targetCell = gameState.grid[index];
+
+    // 處理【炸彈卡】
+    if (card.id === 'bomb') {
+      if (!targetCell || (!targetCell.owner && targetCell.type !== 'obstacle')) {
+        alert("炸彈卡必須選擇地圖上已放置的設施或障礙物進行炸毀！");
         return;
       }
-      triggerForestMiniGame();
-    } else if (type === 'blackmarket') {
-      openBlackMarket();
-    } else if (type === 'cards') {
-      if (gameState.p1Honey < 1) { alert("蜜糖不足 1 個！"); return; }
-      gameState.p1Honey--;
-      drawCards(currentCountry.id === 'penguin' ? 3 : 5);
-      document.getElementById('ui-log').innerText = "🔄 已刷新手牌！";
+      saveHistoryState();
+      deductHoney(cost);
+      
+      gameState.grid[index] = null;
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `💥 炸彈卡發揮威力！成功炸毀了格子上的設施/障礙！`;
+      updateUI();
+      return;
+    }
+
+    // 處理【斑點狗國暴雨限制】
+    if (gameMode === 'coop' && currentCoopLevel === 1 && gameState.currentWeather.id === 'storm') {
+      saveHistoryState();
+      deductHoney(cost);
+      consumeSelectedCard();
+      alert("⛈️ 暴雨狂風襲來！建屋宣告失敗，卡牌作廢！");
+      updateUI();
+      return;
+    }
+
+    // 處理【海豚國小熊熊手滑】
+    if (gameMode === 'coop' && currentCoopLevel === 2 && isP1 && Math.random() < 0.25) {
+      saveHistoryState();
+      deductHoney(cost);
+      consumeSelectedCard();
+      alert("☔ 小熊熊怕雨手滑，放置失敗卡牌作廢！");
+      updateUI();
+      return;
+    }
+
+    // 處理【朋友探訪】
+    if (card.id === 'visit') {
+      if (targetCell !== null) { alert("朋友探訪只能選擇空地進行封鎖！"); return; }
+      saveHistoryState();
+      deductHoney(cost);
+
+      const targetPlayer = isP1 ? 'p2' : 'p1';
+      gameState.grid[index] = { type: 'blocked', icon: '🚧', blockedFor: targetPlayer };
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `👋 朋友探訪！將於對方「下一局」封鎖該格子！`;
+      updateUI();
+      return;
+    }
+
+    // 處理【大頭狗公園】(佔用橫向 3 格)
+    if (card.id === 'park') {
+      const col = index % 7;
+      if (col > 4 || gameState.grid[index] !== null || gameState.grid[index+1] !== null || gameState.grid[index+2] !== null) {
+        alert("「大頭狗公園」需要佔用橫向連續 3 個空格！");
+        return;
+      }
+      saveHistoryState();
+      deductHoney(cost);
+
+      const ownerTag = gameMode === 'versus' ? gameState.activePlayer : 'coop';
+      gameState.grid[index] = { ...card, owner: ownerTag };
+      gameState.grid[index+1] = { ...card, owner: ownerTag, isSecondary: true };
+      gameState.grid[index+2] = { ...card, owner: ownerTag, isSecondary: true };
+
+      addScore(card.points);
+      recordBuildingStat(ownerTag, card.name, card.icon, card.points);
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `🛝 成功興建「大頭狗公園」！佔用 3 格，得分 +${card.points}！`;
+      updateUI();
+      if (checkBoardFull()) setTimeout(() => endGame(true), 300);
+      return;
+    }
+
+    // 處理【毛巾局】(佔用 2 格)
+    if (card.id === 'towel_office') {
+      if (targetCell !== null) { alert("選擇的首格必須是空地！"); return; }
+      const row = Math.floor(index / 7), col = index % 7;
+      let secondIndex = -1;
+      if (col < 6 && gameState.grid[index + 1] === null) secondIndex = index + 1;
+      else if (row < 6 && gameState.grid[index + 7] === null) secondIndex = index + 7;
+
+      if (secondIndex === -1) { alert("「毛巾局」需要佔據相鄰 2 個連續空格！"); return; }
+
+      saveHistoryState();
+      deductHoney(cost);
+
+      const ownerTag = gameMode === 'versus' ? gameState.activePlayer : 'coop';
+      gameState.grid[index] = { ...card, owner: ownerTag };
+      gameState.grid[secondIndex] = { ...card, owner: ownerTag, isSecondary: true };
+
+      addScore(card.points);
+      recordBuildingStat(ownerTag, card.name, card.icon, card.points);
+      consumeSelectedCard();
+
+      document.getElementById('ui-log').innerText = `🏢 成功興建「毛巾局」！得分 +${card.points}！`;
+      updateUI();
+      if (checkBoardFull()) setTimeout(() => endGame(true), 300);
+      return;
+    }
+
+    // 普通建築放置
+    if (targetCell !== null) {
+      document.getElementById('ui-log').innerText = "該格子已有設施、障礙或被封鎖，請選擇空地！";
+      return;
+    }
+
+    saveHistoryState();
+    deductHoney(cost);
+
+    let scoreBonus = card.points;
+    const adj = getAdjacentIndices(index);
+
+    if (gameState.currentWeather.effect === 'rain' && (card.id === 'bath' || adj.some(i => gameState.grid[i]?.type === 'water'))) scoreBonus += 10;
+    if (gameState.currentWeather.effect === 'heat' && adj.some(i => gameState.grid[i]?.type === 'obstacle')) scoreBonus += 10;
+
+    const ownerTag = gameMode === 'versus' ? gameState.activePlayer : 'coop';
+    gameState.grid[index] = { ...card, owner: ownerTag };
+    
+    addScore(scoreBonus);
+    recordBuildingStat(ownerTag, card.name, card.icon, scoreBonus);
+    consumeSelectedCard();
+
+    document.getElementById('ui-log').innerText = `✨ 成功放置 ${card.name}，得分 +${scoreBonus}！`;
+    updateUI();
+
+    if (checkBoardFull()) setTimeout(() => endGame(true), 300);
+  }
+
+  function addScore(amount) {
+    if (gameMode === 'versus') {
+      if (gameState.activePlayer === 'p1') gameState.p1Score += amount;
+      else gameState.p2Score += amount;
+    } else {
+      gameState.coopScore += amount;
+    }
+  }
+
+  function usePartyCard() {
+    const isP1 = gameState.activePlayer === 'p1';
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost) : 0;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
+
+    if (currentHoney < cost) { alert("蜜糖不足！"); return; }
+
+    if (confirm(`確定使用笑笑熊聚會卡？對方下一局將無法放置建築！`)) {
+      saveHistoryState();
+      deductHoney(cost);
+
+      if (isP1) gameState.p2PartyLocked = true; else gameState.p1PartyLocked = true;
+
+      consumeSelectedCard();
+      alert("🎉 笑笑熊聚會發動成功！對方下一局只能儲卡，無法放置建築！");
       updateUI();
     }
   }
 
-  /* --- 點擊地圖格子建屋 --- */
-  function handleCellClick(index) {
+  function useWeatherCard() {
     const isP1 = gameState.activePlayer === 'p1';
+    const card = gameState.selectedCard;
+    const cost = gameState.selectedCardSource === 'drawn' ? (gameState.currentWeather.effect === 'freeze' ? Math.max(0, card.cost - 1) : card.cost) : 0;
+    const currentHoney = gameMode === 'versus' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.coopHoney;
 
-    if (gameState.selectedIndex === undefined || gameState.selectedIndex === -1) {
-      document.getElementById('ui-log').innerText = "請先選擇手牌！";
-      return;
-    }
+    if (currentHoney < cost) { alert("蜜糖不足！"); return; }
 
-    const card = gameState.hand[gameState.selectedIndex];
+    const optionsContainer = document.getElementById('weather-options');
+    optionsContainer.innerHTML = '';
 
-    // 合作模式特殊炸彈與邏輯限制
-    if (gameMode === 'story') {
-      if (currentCountry.id === 'bigdog' && isP1) { alert("小熊熊尋找細肥的中，無法放置！"); return; }
-      if (currentCountry.id === 'pinkbear' && !isP1) { alert("毛巾豬心情低落，無法放置！"); return; }
-
-      if (card.id === 'bomb') {
-        if (!gameState.grid[index] || gameState.grid[index].type !== 'obstacle') {
-          alert("炸彈只能炸毀障礙物！");
-          return;
-        }
-        gameState.grid[index] = null;
-        gameState.hand.splice(gameState.selectedIndex, 1);
-        gameState.selectedIndex = -1;
-        alert("💣 成功炸毀障礙物！");
+    WEATHER_LIST.forEach(w => {
+      const opt = document.createElement('div');
+      opt.className = 'weather-opt';
+      opt.innerHTML = `<b>${w.name}</b><br><span style="font-size:0.7rem; color:#666;">${w.desc}</span>`;
+      opt.onclick = () => {
+        saveHistoryState();
+        deductHoney(cost);
+        gameState.forcedNextWeather = w;
+        consumeSelectedCard();
+        document.getElementById('weather-modal').classList.remove('active');
+        alert(`🌤️ 已指定下一局天氣為：${w.name}！`);
         updateUI();
-        return;
-      }
+      };
+      optionsContainer.appendChild(opt);
+    });
 
-      if (gameState.p1Honey < card.cost) { alert("蜜糖不足！"); return; }
-      if (gameState.grid[index] !== null) { alert("此位置無法放置！"); return; }
+    document.getElementById('weather-modal').classList.add('active');
+  }
 
-      if (currentCountry.id === 'dolphin' && isP1 && Math.random() < 0.25) {
-        gameState.p1Honey -= card.cost;
-        gameState.hand.splice(gameState.selectedIndex, 1);
-        gameState.selectedIndex = -1;
-        alert("🌊 小熊熊太怕水了！放置建築失敗！");
-        updateUI();
-        return;
-      }
-      if (currentCountry.id === 'dalmatian' && Math.random() < 0.2) {
-        alert("⛈️ 突然下起暴雨！建築放置失敗！");
-        gameState.p1Honey -= card.cost;
-        updateUI();
-        return;
-      }
-
-      // 合作建屋成功
-      gameState.p1Honey -= card.cost;
-      gameState.p1Score += card.points;
-      gameState.grid[index] = { ...card };
-      if (card.id === 'dal_house') gameState.dalmatianHouses++;
-
+  function deductHoney(amount) {
+    if (gameMode === 'versus') {
+      if (gameState.activePlayer === 'p1') gameState.p1Honey -= amount;
+      else gameState.p2Honey -= amount;
     } else {
-      // 原版雙人對戰放置邏輯
-      let curHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
-      if (curHoney < card.cost) { alert("蜜糖不足！"); return; }
-      if (gameState.grid[index] !== null) { alert("此位置已有建築！"); return; }
-
-      if (isP1) { gameState.p1Honey -= card.cost; gameState.p1Score += card.points; }
-      else { gameState.p2Honey -= card.cost; gameState.p2Score += card.points; }
-
-      gameState.grid[index] = { ...card, owner: gameState.activePlayer };
-    }
-
-    gameState.hand.splice(gameState.selectedIndex, 1);
-    gameState.selectedIndex = -1;
-    document.getElementById('ui-log').innerText = `✨ 成功建造 ${card.name}！`;
-    updateUI();
-  }
-
-  /* --- 合作模式：3 大小遊戲實作 --- */
-  function triggerForestMiniGame() {
-    const games = ['poker', 'sudoku', 'memory'];
-    const selectedGame = games[Math.floor(Math.random() * games.length)];
-    const modal = document.getElementById('minigame-modal');
-    const content = document.getElementById('minigame-content');
-    modal.classList.add('active');
-
-    // 1. 比大小
-    if (selectedGame === 'poker') {
-      const currentCard = Math.floor(Math.random() * 10) + 1;
-      content.innerHTML = `
-        <h2>🃏 森林卡牌接龍</h2>
-        <p>當前卡牌點數：<b style="font-size:1.8rem; color:#ff9800;">${currentCard}</b></p>
-        <p>請猜下一張牌比當前牌大還是小？</p>
-        <div style="display:flex; gap:10px; margin:15px 0;">
-          <button class="btn" onclick="playPokerGame(${currentCard}, 'bigger')">📈 比大</button>
-          <button class="btn" onclick="playPokerGame(${currentCard}, 'smaller')">📉 比小</button>
-        </div>
-      `;
-    } 
-    // 2. 6x6 數獨解密
-    else if (selectedGame === 'sudoku') {
-      content.innerHTML = `
-        <h2>🧩 6x6 森林數獨解密</h2>
-        <p>請找出並點擊缺少的正確數字以獲取蜜糖：</p>
-        <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:15px 0;">
-          <div class="mini-game-cell">1</div>
-          <div class="mini-game-cell">2</div>
-          <div class="mini-game-cell">3</div>
-          <div class="mini-game-cell">4</div>
-          <div class="mini-game-cell">5</div>
-          <div class="mini-game-cell" style="background:#ffe082; color:#d81b60; font-size:1.1rem;" onclick="finishMiniGame(true, 3)">❓</div>
-        </div>
-      `;
-    } 
-    // 3. 圖案配對連連看
-    else {
-      content.innerHTML = `
-        <h2>🎴 圖案記憶連連看</h2>
-        <p>點擊翻開卡牌，翻出 🍯 即可採集蜂蜜！</p>
-        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:15px 0;">
-          <div class="memory-card" onclick="flipMemoryCard(this, '🍯')">❓</div>
-          <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
-          <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
-          <div class="memory-card" onclick="flipMemoryCard(this, '🍯')">❓</div>
-        </div>
-      `;
+      gameState.coopHoney -= amount;
     }
   }
 
-  function playPokerGame(currentCard, choice) {
-    const nextCard = Math.floor(Math.random() * 10) + 1;
-    const win = (choice === 'bigger' && nextCard >= currentCard) || (choice === 'smaller' && nextCard <= currentCard);
-    alert(`下一張牌是：${nextCard}！\n${win ? '🎉 猜對了！採到 3 個蜜糖！' : '❌ 猜錯了，沒採到蜜糖！'}`);
-    finishMiniGame(win, 3);
-  }
-
-  let memoryFlippedCount = 0;
-  function flipMemoryCard(el, icon) {
-    if (el.innerText !== '❓') return;
-    el.innerText = icon;
-    if (icon === '🍯') {
-      alert("🎉 翻到了 🍯！成功獲得 2 個蜜糖！");
-      finishMiniGame(true, 2);
+  function consumeSelectedCard() {
+    if (gameState.selectedCardSource === 'drawn') {
+      gameState.drawnCards.splice(gameState.selectedCardIndex, 1);
     } else {
-      memoryFlippedCount++;
-      if (memoryFlippedCount >= 2) {
-        alert("❌ 沒翻到蜜糖！採蜜失敗！");
-        finishMiniGame(false, 0);
-      }
+      const storedList = gameMode === 'versus' ? (gameState.activePlayer === 'p1' ? gameState.p1Stored : gameState.p2Stored) : gameState.coopStored;
+      storedList.splice(gameState.selectedCardIndex, 1);
     }
+    gameState.selectedCard = null;
+    gameState.selectedCardSource = null;
+    gameState.selectedCardIndex = -1;
   }
 
-  function finishMiniGame(success, reward = 2) {
-    forestMiniGameCount++;
-    if (success) {
-      gameState.p1Honey += reward;
+  function recordBuildingStat(player, cardName, icon, scoreGained) {
+    const statsObj = player === 'coop' ? gameState.coopBuildStats : (player === 'p1' ? gameState.p1BuildStats : gameState.p2BuildStats);
+    if (!statsObj[cardName]) {
+      statsObj[cardName] = { icon: icon, count: 0, totalScore: 0 };
     }
-    closeModal('minigame-modal');
+    statsObj[cardName].count += 1;
+    statsObj[cardName].totalScore += scoreGained;
+  }
+
+  function saveHistoryState() {
+    gameState.historyStack.push({
+      grid: JSON.parse(JSON.stringify(gameState.grid)),
+      p1Score: gameState.p1Score, p2Score: gameState.p2Score, coopScore: gameState.coopScore,
+      p1Honey: gameState.p1Honey, p2Honey: gameState.p2Honey, coopHoney: gameState.coopHoney,
+      p1Stored: JSON.parse(JSON.stringify(gameState.p1Stored)),
+      p2Stored: JSON.parse(JSON.stringify(gameState.p2Stored)),
+      coopStored: JSON.parse(JSON.stringify(gameState.coopStored)),
+      drawnCards: JSON.parse(JSON.stringify(gameState.drawnCards)),
+      p1Stats: JSON.parse(JSON.stringify(gameState.p1BuildStats)),
+      p2Stats: JSON.parse(JSON.stringify(gameState.p2BuildStats)),
+      coopStats: JSON.parse(JSON.stringify(gameState.coopBuildStats))
+    });
+  }
+
+  function redoAction() {
+    if (gameState.historyStack.length === 0) return;
+    const lastState = gameState.historyStack.pop();
+    gameState.grid = lastState.grid;
+    gameState.p1Score = lastState.p1Score; gameState.p2Score = lastState.p2Score; gameState.coopScore = lastState.coopScore;
+    gameState.p1Honey = lastState.p1Honey; gameState.p2Honey = lastState.p2Honey; gameState.coopHoney = lastState.coopHoney;
+    gameState.p1Stored = lastState.p1Stored; gameState.p2Stored = lastState.p2Stored; gameState.coopStored = lastState.coopStored;
+    gameState.drawnCards = lastState.drawnCards;
+    gameState.p1BuildStats = lastState.p1Stats; gameState.p2BuildStats = lastState.p2Stats; gameState.coopBuildStats = lastState.coopStats;
+    gameState.selectedCard = null;
+    gameState.selectedCardSource = null;
+    gameState.selectedCardIndex = -1;
+
+    document.getElementById('ui-log').innerText = "↩️ 已成功復原 (Redo) 上一步動作！";
     updateUI();
   }
 
-  /* --- 黑市交易 --- */
-  function openBlackMarket() {
-    const modal = document.getElementById('blackmarket-modal');
-    const container = document.getElementById('blackmarket-items');
-    container.innerHTML = `
-      <div style="background:#f5f5f5; padding:8px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
-        <div><b>💣 炸彈卡</b><br><span style="font-size:0.65rem;">可炸毀地圖障礙物</span></div>
-        <button class="btn" style="width:auto; padding:4px 8px;" onclick="buyBlackMarketItem('bomb', 3)">3 🍯 購買</button>
-      </div>
-    `;
-    modal.classList.add('active');
+  function getAdjacentIndices(idx) {
+    const row = Math.floor(idx / 7), col = idx % 7, adj = [];
+    if (row > 0) adj.push(idx - 7); if (row < 6) adj.push(idx + 7);
+    if (col > 0) adj.push(idx - 1); if (col < 6) adj.push(idx + 1);
+    return adj;
   }
 
-  function buyBlackMarketItem(itemId, cost) {
-    if (gameState.p1Honey < cost) { alert("蜜糖不足！"); return; }
-    gameState.p1Honey -= cost;
-    gameState.hand.push({ id: 'bomb', name: '炸彈卡', icon: '💣', cost: 0, points: 0 });
-    alert("🖤 成功購買炸彈卡！已加入手牌！");
-    closeModal('blackmarket-modal');
-    updateUI();
+  function checkBoardFull() {
+    return gameState.grid.every(cell => cell !== null);
   }
 
-  /* --- 切換回合與遊戲結算 --- */
   function finishTurn() {
-    forestMiniGameCount = 0; // 進入新回合時重置小遊戲次數
+    if (checkBoardFull()) { endGame(true); return; }
 
-    if (gameMode === 'story' && currentCountry.id === 'pinkbear' && gameState.round >= 5) {
-      const emptyCells = gameState.grid.map((c, i) => c === null ? i : -1).filter(i => i !== -1);
-      if (emptyCells.length > 0) {
-        const expandIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-        gameState.grid[expandIndex] = { type: 'lake', name: '擴展湖水', icon: '🌊' };
-        gameState.lakeExpandCount++;
-        alert("⚠️ 第 5 局後湖水擴展了 1 格！扣除 20 分！");
-      }
-    }
+    if (gameState.activePlayer === 'p1') gameState.p1PartyLocked = false;
+    else gameState.p2PartyLocked = false;
 
     if (gameState.activePlayer === 'p1') {
       gameState.activePlayer = 'p2';
+      switchScreen('transition-screen');
+      setupTransition(`第 ${gameState.round} 局 - 交給${p2Name}`, "🐷", `${p2Name} (P2) 回合！`, "btn", () => startTurn());
     } else {
-      if (gameState.round >= gameState.maxRounds) {
-        endGame();
-        return;
-      }
+      if (gameState.round >= gameState.maxRounds) { endGame(false); return; }
       gameState.round++;
       gameState.activePlayer = 'p1';
+      switchScreen('transition-screen');
+      setupTransition(`第 ${gameState.round} 局 - 交給${p1Name}`, "🐻", (gameMode === 'versus' && gameState.round === 8) ? "⚠️ 第 8 局起進入暗牌盲測模式！" : `${p1Name} (P1) 回合！`, "btn", () => startTurn());
     }
-
-    updateUI();
   }
 
-  function endGame() {
+  /* --- 終局結算與揭曉 --- */
+  function endGame(isFullBoard = false) {
     switchScreen('end-screen');
-    const statusEl = document.getElementById('end-status');
-    const detailsEl = document.getElementById('end-details');
 
-    if (gameMode === 'pvp') {
-      let winnerText = "";
-      if (gameState.p1Score > gameState.p2Score) winnerText = "🏆 🐻 小熊熊 獲勝！";
-      else if (gameState.p2Score > gameState.p1Score) winnerText = "🏆 🐷 毛巾豬 獲勝！";
-      else winnerText = "🤝 平手，不分勝負！";
+    let winnerText = "";
+    let winnerKey = null;
 
-      statusEl.innerText = winnerText;
-      statusEl.style.color = "#ff9800";
-      detailsEl.innerText = `🐻 小熊熊 得分：${gameState.p1Score} 分\n🐷 毛巾豬 得分：${gameState.p2Score} 分`;
+    if (gameMode === 'versus') {
+      if (gameState.p1Score > gameState.p2Score) {
+        winnerText = `🐻 ${p1Name} 贏得笑笑熊國冠軍！`;
+        winnerKey = 'p1';
+      } else if (gameState.p2Score > gameState.p1Score) {
+        winnerText = `🐷 ${p2Name} 贏得笑笑熊國冠軍！`;
+        winnerKey = 'p2';
+      } else {
+        winnerText = "🤝 雙方勢均力敵，平手！";
+      }
+
+      document.getElementById('winner-display').innerText = winnerText;
+      document.getElementById('end-reason').innerText = isFullBoard ? "⚡ 地盤已被全數佔滿！即時完結！" : "10 局爭霸戰順利完結！";
+
+      let p1Rows = "", p2Rows = "";
+      Object.keys(gameState.p1BuildStats).forEach(k => {
+        const i = gameState.p1BuildStats[k];
+        p1Rows += `<tr><td>${i.icon} ${k}</td><td>${i.count}</td><td>+${i.totalScore}</td></tr>`;
+      });
+      Object.keys(gameState.p2BuildStats).forEach(k => {
+        const i = gameState.p2BuildStats[k];
+        p2Rows += `<tr><td>${i.icon} ${k}</td><td>${i.count}</td><td>+${i.totalScore}</td></tr>`;
+      });
+
+      document.getElementById('end-stats').innerHTML = `
+        <h3 style="text-align:center; margin-bottom:4px;">📊 終局數據揭曉</h3>
+        <div style="background:#fff0f3; padding:6px; border-radius:8px; margin-bottom:8px;">
+          <b style="color:var(--p1-dark);">🐻 ${p1Name} 總分：${gameState.p1Score} 分</b>
+          <table class="detail-table">
+            <thead><tr><th>建築設施</th><th>數量</th><th>得分</th></tr></thead>
+            <tbody>${p1Rows || '<tr><td colspan="3">無建造設施</td></tr>'}</tbody>
+          </table>
+        </div>
+        <div style="background:#e1f5fe; padding:6px; border-radius:8px;">
+          <b style="color:var(--p2-dark);">🐷 ${p2Name} 總分：${gameState.p2Score} 分</b>
+          <table class="detail-table">
+            <thead><tr><th>建築設施</th><th>數量</th><th>得分</th></tr></thead>
+            <tbody>${p2Rows || '<tr><td colspan="3">無建造設施</td></tr>'}</tbody>
+          </table>
+        </div>
+      `;
     } else {
-      let passed = true;
+      // 合作模式驗證任務
+      let finalScore = gameState.coopScore;
+      let missionSuccess = true;
       let reason = "";
 
-      if (currentCountry.id === 'dalmatian') {
-        if (gameState.dalmatianHouses < 10) { passed = false; reason += "❌ 斑點狗屋不足 10 個！\n"; }
-        if (gameState.p1Score < 400) { passed = false; reason += "❌ 分數未達 400 分！\n"; }
-      } else if (currentCountry.id === 'dolphin') {
-        let validDolphins = true;
-        gameState.grid.forEach((cell, idx) => {
-          if (cell && cell.id === 'dol_house') {
-            const adj = [idx-1, idx+1, idx-6, idx+6];
-            const hasLib = adj.some(i => i>=0 && i<36 && gameState.grid[i]?.id === 'library');
-            if (!hasLib) validDolphins = false;
+      if (currentCoopLevel === 1) {
+        let dalmatianCount = countGridType('dalmatian_house');
+        if (dalmatianCount < 10) { missionSuccess = false; reason += `斑點狗屋數量不足 (${dalmatianCount}/10)。`; }
+        if (finalScore < 400) { missionSuccess = false; reason += `總分未達 400 分 (${finalScore}/400)。`; }
+      }
+      else if (currentCoopLevel === 2) {
+        let dolphinOk = true;
+        gameState.grid.forEach((cell, i) => {
+          if (cell && cell.id === 'dolphin_house') {
+            const adj = getAdjacentIndices(i);
+            if (!adj.some(aIdx => gameState.grid[aIdx]?.id === 'library')) dolphinOk = false;
           }
         });
-        if (!validDolphins) { passed = false; reason += "❌ 部分海豚屋附近沒有圖書館！\n"; }
-        if (gameState.p1Score < 450) { passed = false; reason += "❌ 分數未達 450 分！\n"; }
-      } else if (currentCountry.id === 'pinkbear') {
-        const penalty = gameState.lakeExpandCount * 20;
-        gameState.p1Score -= penalty;
-        if (gameState.p1Score < 450) { passed = false; reason += `❌ 扣除湖水擴張懲罰(${penalty}分)後未達 450 分！\n`; }
-      } else if (currentCountry.id === 'penguin') {
-        let remaining = gameState.grid.filter(c => c && c.type === 'obstacle').length;
-        const penalty = remaining * 20;
-        gameState.p1Score -= penalty;
-        if (gameState.p1Score < 500) { passed = false; reason += `❌ 殘留 ${remaining} 個障礙物(扣${penalty}分)，未達 500 分！\n`; }
+        if (!dolphinOk) { missionSuccess = false; reason += "存在沒有圖書館配套的海豚屋。"; }
+        if (finalScore < 450) { missionSuccess = false; reason += `總分未達 450 分 (${finalScore}/450)。`; }
+      }
+      else if (currentCoopLevel === 3) {
+        let parkCells = countGridType('park');
+        let parkCount = Math.floor(parkCells / 3);
+        if (parkCount < 3) { missionSuccess = false; reason += `公園數量不足 (${parkCount}/3)。`; }
+        if (finalScore < 450) { missionSuccess = false; reason += `總分未達 450 分 (${finalScore}/450)。`; }
+      }
+      else if (currentCoopLevel === 4) {
+        let lakeCount = countGridType('lake') - 4; // 初始 4 格
+        if (lakeCount > 0) {
+          let penalty = lakeCount * 20;
+          finalScore -= penalty;
+          reason += `湖水蔓延 ${lakeCount} 格，扣除 ${penalty} 分！`;
+        }
+        if (finalScore < 450) { missionSuccess = false; reason += `結算總分未達 450 分 (${finalScore}/450)。`; }
+      }
+      else if (currentCoopLevel === 5) {
+        let rockCount = countGridType('rock');
+        if (rockCount > 0) {
+          let penalty = rockCount * 20;
+          finalScore -= penalty;
+          reason += `剩餘 ${rockCount} 個障礙未炸毀，扣除 ${penalty} 分！`;
+        }
+        if (finalScore < 500) { missionSuccess = false; reason += `結算總分未達 500 分 (${finalScore}/500)。`; }
       }
 
-      if (passed) {
-        markCountryPassed(currentCountry.id);
-        statusEl.innerText = "🎉 拯救成功！成功完成拯救任務！";
-        statusEl.style.color = "#388e3c";
+      if (missionSuccess) {
+        winnerText = "🌟 任務大成功！成功拯救國家！";
       } else {
-        statusEl.innerText = "💥 拯救失敗！";
-        statusEl.style.color = "#d32f2f";
+        winnerText = "❌ 救援任務失敗...";
       }
-      detailsEl.innerText = `最終合作總分：${gameState.p1Score} 分\n` + reason;
+
+      document.getElementById('winner-display').innerText = winnerText;
+      document.getElementById('end-reason').innerText = reason || "成功達成所有任務挑戰！";
+
+      let coopRows = "";
+      Object.keys(gameState.coopBuildStats).forEach(k => {
+        const i = gameState.coopBuildStats[k];
+        coopRows += `<tr><td>${i.icon} ${k}</td><td>${i.count}</td><td>+${i.totalScore}</td></tr>`;
+      });
+
+      document.getElementById('end-stats').innerHTML = `
+        <h3 style="text-align:center; margin-bottom:4px;">📊 合作救援統計</h3>
+        <div style="background:#e8f5e9; padding:6px; border-radius:8px;">
+          <b style="color:#2e7d32;">🤝 團隊最終得分：${finalScore} 分</b>
+          <table class="detail-table">
+            <thead><tr><th>興建設施</th><th>數量</th><th>獲得分數</th></tr></thead>
+            <tbody>${coopRows || '<tr><td colspan="3">無興建設施</td></tr>'}</tbody>
+          </table>
+        </div>
+      `;
     }
+
+    if (winnerKey) {
+      setTimeout(() => triggerRenameReward(winnerKey), 600);
+    }
+  }
+
+  function countGridType(typeOrId) {
+    let count = 0;
+    gameState.grid.forEach(cell => {
+      if (cell && (cell.type === typeOrId || cell.id === typeOrId)) count++;
+    });
+    return count;
+  }
+
+  function triggerRenameReward(winnerKey) {
+    const titleEl = document.getElementById('rename-title');
+    const optsContainer = document.getElementById('rename-options');
+    optsContainer.innerHTML = '';
+
+    if (winnerKey === 'p1') {
+      titleEl.innerText = `🎉 恭喜 🐻 ${p1Name} 勝出！`;
+      const choices = ['鄭熊熊', '劉熊熊'];
+      choices.forEach(name => {
+        const btn = document.createElement('div');
+        btn.className = 'rename-opt';
+        btn.innerText = `改名為「${name}」`;
+        btn.onclick = () => saveNewName('p1', name);
+        optsContainer.appendChild(btn);
+      });
+    } else {
+      titleEl.innerText = `🎉 恭喜 🐷 ${p2Name} 勝出！`;
+      const choices = ['鄭毛巾', '劉毛巾'];
+      choices.forEach(name => {
+        const btn = document.createElement('div');
+        btn.className = 'rename-opt';
+        btn.innerText = `改名為「${name}」`;
+        btn.onclick = () => saveNewName('p2', name);
+        optsContainer.appendChild(btn);
+      });
+    }
+
+    document.getElementById('rename-modal').classList.add('active');
+  }
+
+  function saveNewName(playerKey, newName) {
+    if (playerKey === 'p1') { p1Name = newName; localStorage.setItem('p1Name', newName); }
+    else { p2Name = newName; localStorage.setItem('p2Name', newName); }
+
+    document.getElementById('rename-modal').classList.remove('active');
+    alert(`✅ 已成功改名為「${newName}」！此名稱將永久記錄於往後的遊戲！`);
+    
+    const winnerDisplay = document.getElementById('winner-display');
+    if (playerKey === 'p1') winnerDisplay.innerText = `🐻 ${p1Name} 贏得笑笑熊國冠軍！`;
+    else winnerDisplay.innerText = `🐷 ${p2Name} 贏得笑笑熊國冠軍！`;
   }
 </script>
 </body>
