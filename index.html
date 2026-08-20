@@ -129,9 +129,6 @@
       <ul style="padding-left:16px; font-size:0.78rem; line-height:1.6; margin: 8px 0;">
         <li><b>對戰模式</b>：共 <b>10 局回合</b>，輪流於 7x7 地圖放置建築得分，最終總分高者勝。第 8 局起隱藏即時分數！</li>
         <li><b>合作冒險</b>：雙方<b>共享分數與蜜糖</b>，共進行 <b>12 局回合</b>，合力完成 5 大國家的專屬救援目標！</li>
-        <li><b>角色限制（合作）</b>：
-          <br>• 大頭狗國：小熊熊掛念細肥的，無法放置建築。
-          <br>• 粉紅熊國：毛巾豬心情低落，無法放置或休息。湖水會在第 5 局起蔓延！</li>
         <li><b>固定蜜糖與重洗</b>：每局補充基礎 5 蜜糖；洗牌需花費 1 蜜糖。存卡區可儲存最多 4 張卡牌。</li>
       </ul>
       <button class="btn" onclick="toggleHelpModal(false)">我明白了！</button>
@@ -144,8 +141,8 @@
     <h1>笑笑熊國</h1>
     <p>領地爭霸與合作冒險之旅</p>
     <div style="height: 10px;"></div>
-    <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.05rem;" onclick="startVersusGame()">⚔️ 對戰模式 (領地爭霸)</button>
-    <button class="btn" style="background: linear-gradient(135deg, #81c784, #388e3c); width: 80%; font-size: 1.05rem;" onclick="showLevelSelect()">🤝 合作模式 (5國救援)</button>
+    <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #f092a9); width: 80%; font-size: 1.05rem;" onclick="startVersusGame()">⚔️ 對戰模式 </button>
+    <button class="btn" style="background: linear-gradient(135deg, #81c784, #388e3c); width: 80%; font-size: 1.05rem;" onclick="showLevelSelect()">🤝 合作模式 </button>
     <button class="btn" style="background: #90a4ae; width: 80%;" onclick="toggleHelpModal(true)">📖 玩法說明</button>
   </div>
 
@@ -204,7 +201,7 @@
   <!-- 結算畫面 -->
   <div id="end-screen" class="screen">
     <div class="hero-icon" id="end-icon">👑</div>
-    <h1 id="end-title">笑笑熊國遊戲結束！</h1>
+    <h1 id="end-title">遊戲結束！</h1>
     <div style="font-size:1.6rem; font-weight:bold; text-align:center; margin:4px 0; color:#fda085;" id="winner-display">計算中...</div>
     <div style="font-size:0.75rem; text-align:center; color:var(--text-muted);" id="end-reason">順利完結</div>
     
@@ -250,10 +247,10 @@
   ];
 
   const COOP_STORIES = {
-    1: { name: "🐾 斑點狗國", desc: "斑點狗國最近遭受了連續的暴雨危機，村莊淹水、小狗們無家可歸。你們需要攜手合作，在 12 回合內建造至少 10 間『斑點狗屋』，並取得 400 分以上來重建家園！" },
-    2: { name: "🐬 海豚國", desc: "海豚國正積極推動知識島計畫，希望為小海豚們建立完善的文化設施。你們需要建設海豚屋，並且每棟海豚屋都必須有『圖書館』相鄰配套，總分達到 450 分以上才能成功！" },
-    3: { name: "🐶 大頭狗國", desc: "大頭狗國的小狗們非常需要運動與休閒空間！你們必須合力建造至少 3 座超大型的『大頭狗公園』(每座佔用橫向 3 格)，並使總分達到 450 分以上！" },
-    4: { name: "🐻‍❄️ 粉紅熊國", desc: "粉紅熊國中央的粉紅湖水因神祕力量開始向外蔓延！在第 5 局開始湖水會逐局擴散。你們必須一邊應付蔓延的湖水，一邊綠化領地，使最終結算總分達到 450 分以上！" },
+    1: { name: "🐾 斑點狗國", desc: "斑點狗國最近遭受了連續的暴雨危機，村莊淹水、斑點狗們無家可歸。你們的好朋友斑點向你們求助，你們需要攜手合作，在 12 回合內建造至少 10 間『斑點狗屋』，並取得 400 分以上來重建家園！" },
+    2: { name: "🐬 海豚國", desc: "海豚仔想為改革海豚王國，正積極推動知識島計畫，希望為小海豚們建立完善的文化設施。你們需要建設海豚屋，並且每棟海豚屋都必須有『圖書館』相鄰配套，總分達到 450 分以上才能成功！但因為小熊熊怕水，可能會手滑..." },
+    3: { name: "🐶 大頭狗國", desc: "大頭狗國是小熊熊老公細肥的負責的國王，細肥的希望國王的小狗們有更多的運動與休閒空間！你們必須合力建造至少 3 座超大型的『大頭狗公園』(每座佔用橫向 3 格)，並使總分達到 450 分以上！但要注意的是，小熊熊會因為太想去搵細肥的玩而分心，有25%機率導致建築失敗。" },
+    4: { name: "🐻‍❄️ 粉紅熊國", desc: "你們今次來的毛巾豬亡妻啊BE的粉紅熊國，發現粉紅熊國中央的粉紅湖水因神祕力量開始向外蔓延！在第 5 局開始湖水會逐局擴散。你們必須一邊應付蔓延的湖水，一邊綠化領地，使最終結算總分達到 450 分以上！但要注意的是，粉紅熊們令毛巾豬想起啊BE，心情低落，無法放置建築與休息。" },
     5: { name: "🐧 企鵝國", desc: "企鵝國的冰原上散落了許多頑固的障礙物，阻礙了企鵝們的行進路線。你們必須利用炸彈卡清理所有障礙物，並取得 500 分以上的高分才能完成終極救援！" }
   };
 
