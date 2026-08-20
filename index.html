@@ -113,6 +113,15 @@
     </div>
   </div>
 
+  <!-- 劇情引導彈窗 (合作模式專用) -->
+  <div id="story-modal" class="modal-overlay">
+    <div class="modal-content" style="text-align: center;">
+      <h2 id="story-modal-title" style="color: #e65100; margin-bottom: 8px;">📖 國家救援故事</h2>
+      <p id="story-modal-text" style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 14px; color: var(--text-main);"></p>
+      <button class="btn" onclick="confirmStartCoop()">準備出發救援！</button>
+    </div>
+  </div>
+
   <!-- 玩法說明彈窗 -->
   <div id="help-modal" class="modal-overlay">
     <div class="modal-content">
@@ -144,11 +153,11 @@
   <div id="level-select-screen" class="screen">
     <h2>🤝 選擇救援國家</h2>
     <p style="margin-bottom:8px;">請選擇你們要攜手救援的國家目標：</p>
-    <button class="btn" style="background:#ffb74d; width:85%;" onclick="startCoopGame(1)">🐾 1. 斑點狗國 (暴雨危機 - 10狗屋)</button>
-    <button class="btn" style="background:#4fc3f7; width:85%;" onclick="startCoopGame(2)">🐬 2. 海豚國 (圖書館計畫 - 相鄰配套)</button>
-    <button class="btn" style="background:#a1887f; width:85%;" onclick="startCoopGame(3)">🐶 3. 大頭狗國 (公園建設 - 3座大公園)</button>
-    <button class="btn" style="background:#f06292; width:85%;" onclick="startCoopGame(4)">🐻‍❄️ 4. 粉紅熊國 (湖水蔓延 - 圍湖綠化)</button>
-    <button class="btn" style="background:#90a4ae; width:85%;" onclick="startCoopGame(5)">🐧 5. 企鵝國 (炸毀障礙 - 爆破清理)</button>
+    <button class="btn" style="background:#ffb74d; width:85%;" onclick="triggerStory(1)">🐾 斑點狗國</button>
+    <button class="btn" style="background:#4fc3f7; width:85%;" onclick="triggerStory(2)">🐬 海豚國</button>
+    <button class="btn" style="background:#a1887f; width:85%;" onclick="triggerStory(3)">🐶 大頭狗國</button>
+    <button class="btn" style="background:#f06292; width:85%;" onclick="triggerStory(4)">🐻‍❄️ 粉紅熊國</button>
+    <button class="btn" style="background:#90a4ae; width:85%;" onclick="triggerStory(5)">🐧 企鵝國</button>
     <div style="height:10px;"></div>
     <button class="btn" style="background:#e0e0e0; color:#333; width:60%;" onclick="switchScreen('start-screen')">返回主選單</button>
   </div>
@@ -209,7 +218,6 @@
   let p1Name = localStorage.getItem('p1Name') || '小熊熊';
   let p2Name = localStorage.getItem('p2Name') || '毛巾豬';
 
-  // 基礎對戰卡牌庫
   const CARDS_VERSUS = [
     { id: 'house', name: "笑笑小屋", icon: '🏠', cost: 1, weight: 15, points: 10, desc: '基礎設施，佔領領地。', type: 'build' },
     { id: 'tree', name: '防風樹木', icon: '🌲', cost: 2, weight: 12, points: 15, desc: '保護周圍設施，高重量。', type: 'build' },
@@ -227,7 +235,6 @@
     { id: 'weather', name: '天氣師', icon: '🌤️', cost: 2, weight: 5, points: 0, desc: '【特別卡】自由控制下一局的全場天氣！', type: 'special_weather' }
   ];
 
-  // 合作專屬建築卡
   const CARD_DALMATIAN = { id: 'dalmatian_house', name: '斑點狗屋', icon: '🐾', cost: 3, weight: 15, points: 40, desc: '斑點狗國救援專用設施。', type: 'build' };
   const CARD_DOLPHIN = { id: 'dolphin_house', name: '海豚屋', icon: '🐬', cost: 4, weight: 12, points: 40, desc: '海豚國救援專用設施。', type: 'build' };
   const CARD_LIBRARY = { id: 'library', name: '圖書館', icon: '📚', cost: 3, weight: 12, points: 20, desc: '配合海豚屋興建以完成計畫！', type: 'build' };
@@ -242,7 +249,15 @@
     { id: 'freeze', name: "❄️ 寒冬霜凍", desc: "本局所有卡牌蜂蜜消耗 -1 (最低 0)！", effect: 'freeze' }
   ];
 
-  let gameMode = 'versus'; // 'versus' or 'coop'
+  const COOP_STORIES = {
+    1: { name: "🐾 斑點狗國", desc: "斑點狗國最近遭受了連續的暴雨危機，村莊淹水、小狗們無家可歸。你們需要攜手合作，在 12 回合內建造至少 10 間『斑點狗屋』，並取得 400 分以上來重建家園！" },
+    2: { name: "🐬 海豚國", desc: "海豚國正積極推動知識島計畫，希望為小海豚們建立完善的文化設施。你們需要建設海豚屋，並且每棟海豚屋都必須有『圖書館』相鄰配套，總分達到 450 分以上才能成功！" },
+    3: { name: "🐶 大頭狗國", desc: "大頭狗國的小狗們非常需要運動與休閒空間！你們必須合力建造至少 3 座超大型的『大頭狗公園』(每座佔用橫向 3 格)，並使總分達到 450 分以上！" },
+    4: { name: "🐻‍❄️ 粉紅熊國", desc: "粉紅熊國中央的粉紅湖水因神祕力量開始向外蔓延！在第 5 局開始湖水會逐局擴散。你們必須一邊應付蔓延的湖水，一邊綠化領地，使最終結算總分達到 450 分以上！" },
+    5: { name: "🐧 企鵝國", desc: "企鵝國的冰原上散落了許多頑固的障礙物，阻礙了企鵝們的行進路線。你們必須利用炸彈卡清理所有障礙物，並取得 500 分以上的高分才能完成終極救援！" }
+  };
+
+  let gameMode = 'versus';
   let currentCoopLevel = 1;
 
   let gameState = {
@@ -286,27 +301,34 @@
     setupTransition("笑笑熊國領地爭霸！", "🐻", `${p1Name} (P1) 的回合！`, "btn", () => startTurn());
   }
 
+  function triggerStory(level) {
+    currentCoopLevel = level;
+    const story = COOP_STORIES[level];
+    document.getElementById('story-modal-title').innerText = story.name;
+    document.getElementById('story-modal-text').innerText = story.desc;
+    document.getElementById('story-modal').classList.add('active');
+  }
+
+  function confirmStartCoop() {
+    document.getElementById('story-modal').classList.remove('active');
+    startCoopGame(currentCoopLevel);
+  }
+
   function startCoopGame(level) {
     gameMode = 'coop';
     currentCoopLevel = level;
     gameState.maxRounds = 12;
     initGameState();
 
-    // 合作國地圖初始化
     if (level === 4) {
-      // 粉紅熊國：中央設置 2x2 粉紅湖
       [17, 18, 24, 25].forEach(i => gameState.grid[i] = { type: 'lake', icon: '💗' });
     } else if (level === 5) {
-      // 企鵝國：放置 5 個障礙物
       [10, 16, 24, 32, 38].forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
     } else {
       [10, 16, 32, 38].forEach(i => gameState.grid[i] = { type: 'obstacle', icon: '🪨' });
     }
 
-    const levelTitles = [
-      "", "🐾 斑點狗國 (暴雨危機)", "🐬 海豚國 (圖書館計畫)", 
-      "🐶 大頭狗國 (公園建設)", "🐻‍❄️ 粉紅熊國 (湖水蔓延)", "🐧 企鵝國 (炸毀障礙)"
-    ];
+    const levelTitles = ["", "斑點狗國", "海豚國", "大頭狗國", "粉紅熊國", "企鵝國"];
 
     switchScreen('transition-screen');
     setupTransition(`合作冒險：${levelTitles[level]}`, "🐻", `與 ${p2Name} 攜手合作！${p1Name} 先開局！`, "btn", () => startTurn());
@@ -337,13 +359,11 @@
 
   function completeTransition() { if (nextTransitionCallback) nextTransitionCallback(); }
 
-  /* --- 回合發動 --- */
   function startTurn() {
     switchScreen('game-screen');
     gameState.selectedCard = null;
     gameState.historyStack = [];
 
-    // 解封過期封鎖格
     gameState.grid.forEach((cell, i) => {
       if (cell && cell.type === 'blocked') {
         if (cell.blockedFor === gameState.activePlayer) {
@@ -360,7 +380,6 @@
       gameState.currentWeather = WEATHER_LIST[Math.floor(Math.random() * WEATHER_LIST.length)];
     }
 
-    // 粉紅熊國湖水蔓延邏輯 (第 5 局起)
     if (gameMode === 'coop' && currentCoopLevel === 4 && gameState.round >= 5 && gameState.activePlayer === 'p1') {
       expandLake();
     }
@@ -383,7 +402,6 @@
       const totalHoney = 5 + territoryBonus + windmillBonus + bonusHoney;
       if (isP1) gameState.p1Honey = totalHoney; else gameState.p2Honey = totalHoney;
     } else {
-      // 合作模式共享蜜糖
       let bonusHoney = gameState.coopBonusHoneyNext;
       gameState.coopBonusHoneyNext = 0;
       gameState.coopHoney += 5 + bonusHoney;
@@ -419,8 +437,7 @@
     if (currentCoopLevel === 2) pool.push(CARD_DOLPHIN, CARD_LIBRARY);
     if (currentCoopLevel === 3) pool.push(CARD_PARK);
     if (currentCoopLevel === 5) {
-      // 企鵝國：限定牌庫
-      pool = [CARDS_VERSUS[0], CARDS_VERSUS[1], CARDS_VERSUS[10]]; // 小屋, 樹木, 炸彈
+      pool = [CARDS_VERSUS[0], CARDS_VERSUS[1], CARDS_VERSUS[10]];
     }
     return pool;
   }
@@ -693,7 +710,6 @@
 
     const isP1 = gameState.activePlayer === 'p1';
     
-    // 角色限制檢查 (合作模式)
     if (gameMode === 'coop') {
       if (currentCoopLevel === 3 && isP1) { alert("⚠️ 小熊熊掛念細肥的，大頭狗國全場無法放置建築！"); return; }
       if (currentCoopLevel === 4 && !isP1) { alert("⚠️ 毛巾豬心情低落，粉紅熊國全場無法放置建築！"); return; }
@@ -710,7 +726,6 @@
 
     const targetCell = gameState.grid[index];
 
-    // 處理【炸彈卡】
     if (card.id === 'bomb') {
       if (!targetCell || (!targetCell.owner && targetCell.type !== 'obstacle')) {
         alert("炸彈卡必須選擇地圖上已放置的設施或障礙物進行炸毀！");
@@ -727,7 +742,6 @@
       return;
     }
 
-    // 處理【斑點狗國暴雨限制】
     if (gameMode === 'coop' && currentCoopLevel === 1 && gameState.currentWeather.id === 'storm') {
       saveHistoryState();
       deductHoney(cost);
@@ -737,7 +751,6 @@
       return;
     }
 
-    // 處理【海豚國小熊熊手滑】
     if (gameMode === 'coop' && currentCoopLevel === 2 && isP1 && Math.random() < 0.25) {
       saveHistoryState();
       deductHoney(cost);
@@ -747,7 +760,6 @@
       return;
     }
 
-    // 處理【朋友探訪】
     if (card.id === 'visit') {
       if (targetCell !== null) { alert("朋友探訪只能選擇空地進行封鎖！"); return; }
       saveHistoryState();
@@ -762,7 +774,6 @@
       return;
     }
 
-    // 處理【大頭狗公園】(佔用橫向 3 格)
     if (card.id === 'park') {
       const col = index % 7;
       if (col > 4 || gameState.grid[index] !== null || gameState.grid[index+1] !== null || gameState.grid[index+2] !== null) {
@@ -787,7 +798,6 @@
       return;
     }
 
-    // 處理【毛巾局】(佔用 2 格)
     if (card.id === 'towel_office') {
       if (targetCell !== null) { alert("選擇的首格必須是空地！"); return; }
       const row = Math.floor(index / 7), col = index % 7;
@@ -814,7 +824,6 @@
       return;
     }
 
-    // 普通建築放置
     if (targetCell !== null) {
       document.getElementById('ui-log').innerText = "該格子已有設施、障礙或被封鎖，請選擇空地！";
       return;
@@ -993,7 +1002,6 @@
     }
   }
 
-  /* --- 終局結算與揭曉 --- */
   function endGame(isFullBoard = false) {
     switchScreen('end-screen');
 
@@ -1042,7 +1050,6 @@
         </div>
       `;
     } else {
-      // 合作模式驗證任務
       let finalScore = gameState.coopScore;
       let missionSuccess = true;
       let reason = "";
@@ -1070,7 +1077,7 @@
         if (finalScore < 450) { missionSuccess = false; reason += `總分未達 450 分 (${finalScore}/450)。`; }
       }
       else if (currentCoopLevel === 4) {
-        let lakeCount = countGridType('lake') - 4; // 初始 4 格
+        let lakeCount = countGridType('lake') - 4;
         if (lakeCount > 0) {
           let penalty = lakeCount * 20;
           finalScore -= penalty;
@@ -1079,7 +1086,7 @@
         if (finalScore < 450) { missionSuccess = false; reason += `結算總分未達 450 分 (${finalScore}/450)。`; }
       }
       else if (currentCoopLevel === 5) {
-        let rockCount = countGridType('rock');
+        let rockCount = countGridType('obstacle');
         if (rockCount > 0) {
           let penalty = rockCount * 20;
           finalScore -= penalty;
@@ -1095,7 +1102,7 @@
       }
 
       document.getElementById('winner-display').innerText = winnerText;
-      document.getElementById('end-reason').innerText = reason || "成功達成所有任務挑戰！";
+      document.getElementById('end-reason').innerText = (missionSuccess ? "成功達成所有任務挑戰！" : "") + " " + reason;
 
       let coopRows = "";
       Object.keys(gameState.coopBuildStats).forEach(k => {
@@ -1120,6 +1127,15 @@
     }
   }
 
+  function countGridType(typeOrId) {
+    let count = 0;
+    gameState.grid.seek = gameState.grid.forEach(cell => {
+      if (cell && (cell.type === typeOrId || cell.id === typeOrId)) count++;
+    });
+    return count;
+  }
+  
+  // 修正原先 countGridType 函式中的小瑕疵
   function countGridType(typeOrId) {
     let count = 0;
     gameState.grid.forEach(cell => {
