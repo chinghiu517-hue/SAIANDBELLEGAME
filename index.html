@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>笑笑熊國：對戰與故事合作雙模式</title>
+  <title>笑笑熊國：雙人對戰與故事拯救模式</title>
   <style>
     :root {
       --bg-color: #fffaf0;
@@ -21,7 +21,7 @@
     body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
     #app { width: 100%; max-width: 650px; height: 100vh; max-height: 920px; display: flex; flex-direction: column; position: relative; background: var(--bg-color); box-shadow: var(--shadow); overflow: hidden; }
 
-    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 10px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
+    .screen { display: none; flex-direction: column; height: 100%; width: 100%; padding: 12px; position: absolute; top: 0; left: 0; background-color: var(--bg-color); z-index: 1; overflow-y: auto; }
     .screen.active { display: flex; z-index: 2; }
 
     h1 { font-size: 1.4rem; text-align: center; color: var(--text-main); margin-bottom: 4px; }
@@ -70,7 +70,7 @@
     .modal-overlay.active { display: flex; }
     .modal-content { background: #fff; padding: 12px; border-radius: var(--border-radius); width: 92%; max-height: 85%; overflow-y: auto; }
 
-    /* 簡化版國家卡片 */
+    /* 國家選關卡片（簡化版：僅顯示名稱與過關狀態） */
     .country-select-card { background: #fff; border: 2px solid #ffe0b2; border-radius: 10px; padding: 12px; margin: 8px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     .country-select-card:hover { border-color: #ff9800; background-color: #fffde7; }
     .country-name { font-size: 1rem; font-weight: bold; color: #333; }
@@ -86,7 +86,7 @@
 <body>
 
 <div id="app">
-  <!-- 黑市彈窗 -->
+  <!-- 黑市彈窗 (故事模式專用) -->
   <div id="blackmarket-modal" class="modal-overlay">
     <div class="modal-content">
       <h2>🖤 黑市交易</h2>
@@ -96,7 +96,7 @@
     </div>
   </div>
 
-  <!-- 森林小遊戲彈窗 -->
+  <!-- 森林小遊戲彈窗 (故事模式專用) -->
   <div id="minigame-modal" class="modal-overlay">
     <div class="modal-content" id="minigame-content"></div>
   </div>
@@ -107,7 +107,7 @@
     <h1>笑笑熊國遊戲大廳</h1>
     <p>請選擇遊戲模式：</p>
     <div style="margin-top: 30px; display: flex; flex-direction: column; gap: 10px;">
-      <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #ff6b6b);" onclick="startPvpGame()">⚔️ 雙人對戰模式 (4x4)</button>
+      <button class="btn" style="background: linear-gradient(135deg, #ffb3ba, #ff6b6b);" onclick="startPvpGame()">⚔️ 雙人對戰模式 (原版 4x4)</button>
       <button class="btn" style="background: linear-gradient(135deg, #81c784, #388e3c);" onclick="showCountrySelect()">📖 故事拯救模式 (2人合作 6x6)</button>
     </div>
   </div>
@@ -122,8 +122,8 @@
   <!-- 主遊戲畫面 -->
   <div id="game-screen" class="screen">
     <div class="game-header">
-      <div class="stat-box"><span class="stat-label">回合</span><span id="ui-round" class="stat-value">1/12</span></div>
-      <div class="stat-box"><span class="stat-label">當前行動</span><span id="ui-player" class="stat-value">🐻 小熊熊</span></div>
+      <div class="stat-box"><span class="stat-label">回合</span><span id="ui-round" class="stat-value">1/10</span></div>
+      <div class="stat-box"><span class="stat-label">當前玩家</span><span id="ui-player" class="stat-value">🐻 小熊熊</span></div>
       <div class="stat-box"><span class="stat-label">蜜糖</span><span id="ui-honey" class="stat-value">🍯 5</span></div>
       <div class="stat-box"><span class="stat-label">分數</span><span id="ui-score" class="stat-value">✨ 0</span></div>
     </div>
@@ -135,10 +135,7 @@
 
     <!-- 行動面板 -->
     <div class="action-panel" id="action-panel">
-      <div class="action-btn" id="btn-act-build" onclick="selectAction('build')">🏠 放置建築物</div>
-      <div class="action-btn" id="btn-act-forest" onclick="selectAction('forest')">🌲 森林採蜜 (小遊戲)</div>
-      <div class="action-btn" id="btn-act-blackmarket" onclick="selectAction('blackmarket')">🖤 黑市交易</div>
-      <div class="action-btn" id="btn-act-cards" onclick="selectAction('cards')">🎲 抽卡/洗牌 (1🍯)</div>
+      <!-- 原版對戰按鈕與合作按鈕動態呈現 -->
     </div>
 
     <div id="hand-section">
@@ -158,13 +155,14 @@
     <div style="font-size:1.3rem; font-weight:bold; text-align:center; margin:8px 0;" id="end-status">計算中...</div>
     <div style="font-size:0.8rem; text-align:center; color:var(--text-muted); white-space:pre-line;" id="end-details"></div>
     <div style="flex:1"></div>
-    <button class="btn" onclick="showCountrySelect()">返回選擇關卡</button>
+    <button class="btn" onclick="switchScreen('start-screen')">返回主選單</button>
   </div>
 </div>
 
 <script>
   let gameMode = 'pvp';
   
+  // 原版雙人對戰模式建築與資料
   const PVP_BUILDINGS = [
     { id: 'house', name: '小熊屋', icon: '🏠', cost: 1, points: 10 },
     { id: 'honey_factory', name: '蜜糖工廠', icon: '🏭', cost: 2, points: 25 },
@@ -172,6 +170,7 @@
     { id: 'castle', name: '笑笑城堡', icon: '🏰', cost: 3, points: 50 }
   ];
 
+  // 合作拯救模式國家資料
   const COUNTRIES = [
     {
       id: 'dalmatian', name: '1. 斑點狗國 🐶',
@@ -218,7 +217,7 @@
   ];
 
   let currentCountry = null;
-  let forestMiniGameCount = 0; // 每回合小遊戲次數記錄（最多 2 次）
+  let forestMiniGameCount = 0; // 合作模式每回合小遊戲次數 (最多 2 次)
 
   let gameState = {
     round: 1, maxRounds: 10,
@@ -240,7 +239,7 @@
     document.getElementById(id).classList.remove('active');
   }
 
-  /* --- 國家通關記錄 (使用 localStorage) --- */
+  /* --- 國家過關狀態記錄 --- */
   function getPassedCountries() {
     return JSON.parse(localStorage.getItem('passed_countries') || '{}');
   }
@@ -251,7 +250,7 @@
     localStorage.setItem('passed_countries', JSON.stringify(passed));
   }
 
-  /* --- 故事模式選關 (僅顯示名字與過關狀態) --- */
+  /* --- 合作模式：關卡選擇清單 (僅顯示名稱與過關狀態) --- */
   function showCountrySelect() {
     switchScreen('country-screen');
     const container = document.getElementById('country-list');
@@ -273,23 +272,33 @@
     });
   }
 
-  /* --- 遊戲初始化 --- */
+  /* --- 原版對戰模式初始化 --- */
   function startPvpGame() {
     gameMode = 'pvp';
     gameState.round = 1;
     gameState.maxRounds = 10;
     gameState.activePlayer = 'p1';
-    gameState.p1Honey = 5; gameState.p2Honey = 5;
-    gameState.p1Score = 0; gameState.p2Score = 0;
+    gameState.p1Honey = 5;
+    gameState.p2Honey = 5;
+    gameState.p1Score = 0;
+    gameState.p2Score = 0;
     gameState.grid = Array(16).fill(null);
-    forestMiniGameCount = 0;
-    
+    gameState.selectedIndex = -1;
+
+    // 渲染對戰原版行動按鈕
+    const panel = document.getElementById('action-panel');
+    panel.innerHTML = `
+      <div class="action-btn" onclick="pvpGatherHoney()">🍯 採集蜜糖 (+2蜜糖)</div>
+      <div class="action-btn" onclick="pvpDrawCards()">🎲 洗牌/換牌 (1蜜糖)</div>
+    `;
+
     drawCards(4);
     document.getElementById('grid-container').className = "grid-container grid-4x4";
     switchScreen('game-screen');
     updateUI();
   }
 
+  /* --- 合作拯救模式初始化 --- */
   function startStoryGame(country) {
     gameMode = 'story';
     currentCountry = country;
@@ -301,7 +310,17 @@
     gameState.grid = Array(36).fill(null);
     gameState.dalmatianHouses = 0;
     gameState.lakeExpandCount = 0;
+    gameState.selectedIndex = -1;
     forestMiniGameCount = 0;
+
+    // 渲染合作模式行動按鈕
+    const panel = document.getElementById('action-panel');
+    panel.innerHTML = `
+      <div class="action-btn" id="btn-act-build">🏠 放置建築物</div>
+      <div class="action-btn" id="btn-act-forest" onclick="selectAction('forest')">🌲 森林採蜜 (小遊戲)</div>
+      <div class="action-btn" id="btn-act-blackmarket" onclick="selectAction('blackmarket')">🖤 黑市交易</div>
+      <div class="action-btn" id="btn-act-cards" onclick="selectAction('cards')">🎲 抽卡/洗牌 (1🍯)</div>
+    `;
 
     if (country.id === 'pinkbear') {
       [14, 15, 20, 21].forEach(i => gameState.grid[i] = { type: 'lake', name: '粉紅湖', icon: '🌸' });
@@ -315,6 +334,7 @@
     updateUI();
   }
 
+  /* --- 抽牌機制 --- */
   function drawCards(count) {
     gameState.hand = [];
     const pool = gameMode === 'pvp' ? PVP_BUILDINGS : currentCountry.buildings;
@@ -324,6 +344,25 @@
     }
   }
 
+  /* --- 原版對戰獨有行動 --- */
+  function pvpGatherHoney() {
+    if (gameState.activePlayer === 'p1') gameState.p1Honey += 2;
+    else gameState.p2Honey += 2;
+    document.getElementById('ui-log').innerText = "🍯 成功採集 2 個蜜糖！";
+    updateUI();
+  }
+
+  function pvpDrawCards() {
+    let curHoney = gameState.activePlayer === 'p1' ? gameState.p1Honey : gameState.p2Honey;
+    if (curHoney < 1) { alert("蜜糖不足！"); return; }
+    if (gameState.activePlayer === 'p1') gameState.p1Honey--;
+    else gameState.p2Honey--;
+    drawCards(4);
+    document.getElementById('ui-log').innerText = "🎲 成功更換手牌！";
+    updateUI();
+  }
+
+  /* --- UI 畫面更新 --- */
   function updateUI() {
     const isP1 = gameState.activePlayer === 'p1';
     document.getElementById('ui-round').innerText = `${gameState.round}/${gameState.maxRounds}`;
@@ -332,27 +371,19 @@
     if (gameMode === 'pvp') {
       document.getElementById('ui-honey').innerText = `🍯 ${isP1 ? gameState.p1Honey : gameState.p2Honey}`;
       document.getElementById('ui-score').innerText = `✨ P1:${gameState.p1Score} | P2:${gameState.p2Score}`;
-      document.getElementById('ui-event-banner').innerText = `⚔️ 對戰模式：佔領 4x4 領地，獲得最高分者勝出！`;
+      document.getElementById('ui-event-banner').innerText = `⚔️ 雙人對戰模式：佔領 4x4 領地，爭奪最高分數！`;
     } else {
       document.getElementById('ui-honey').innerText = `🍯 ${gameState.p1Honey}`;
       document.getElementById('ui-score').innerText = `✨ ${gameState.p1Score}`;
-      document.getElementById('ui-event-banner').innerText = `📢 【${currentCountry.name}】${currentCountry.desc.split('\n')[0]} (採蜜本局：${forestMiniGameCount}/2次)`;
-    }
+      document.getElementById('ui-event-banner').innerText = `📢 【${currentCountry.name}】採蜜限制：每局最多 ${forestMiniGameCount}/2 次`;
 
-    const btnBuild = document.getElementById('btn-act-build');
-    const btnForest = document.getElementById('btn-act-forest');
-    btnBuild.classList.remove('disabled');
-    btnForest.classList.remove('disabled');
-
-    if (gameMode === 'story') {
-      if (currentCountry.id === 'bigdog' && isP1) {
-        btnBuild.classList.add('disabled');
-        document.getElementById('ui-log').innerText = "⚠️ 小熊熊去找細肥的，本回合無法放置建築！";
-      }
-      if (currentCountry.id === 'pinkbear' && !isP1) {
-        btnBuild.classList.add('disabled');
-        btnForest.classList.add('disabled');
-        document.getElementById('ui-log').innerText = "⚠️ 毛巾豬心情低落，無法放置建築與採蜜！";
+      const btnForest = document.getElementById('btn-act-forest');
+      if (btnForest) {
+        if (currentCountry.id === 'pinkbear' && !isP1) {
+          btnForest.classList.add('disabled');
+        } else {
+          btnForest.classList.remove('disabled');
+        }
       }
     }
 
@@ -403,7 +434,7 @@
     renderHand();
   }
 
-  /* --- 行動觸發與森林小遊戲 (最多2次/回合) --- */
+  /* --- 合作模式專用行動觸發 --- */
   function selectAction(type) {
     const isP1 = gameState.activePlayer === 'p1';
 
@@ -420,28 +451,17 @@
     } else if (type === 'blackmarket') {
       openBlackMarket();
     } else if (type === 'cards') {
-      let honey = gameMode === 'pvp' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.p1Honey;
-      if (honey < 1) { alert("蜜糖不足 1 個！"); return; }
-      
-      if (gameMode === 'pvp') {
-        if (isP1) gameState.p1Honey--; else gameState.p2Honey--;
-        drawCards(4);
-      } else {
-        gameState.p1Honey--;
-        drawCards(currentCountry.id === 'penguin' ? 3 : 5);
-      }
+      if (gameState.p1Honey < 1) { alert("蜜糖不足 1 個！"); return; }
+      gameState.p1Honey--;
+      drawCards(currentCountry.id === 'penguin' ? 3 : 5);
       document.getElementById('ui-log').innerText = "🔄 已刷新手牌！";
       updateUI();
     }
   }
 
+  /* --- 點擊地圖格子建屋 --- */
   function handleCellClick(index) {
     const isP1 = gameState.activePlayer === 'p1';
-
-    if (gameMode === 'story') {
-      if (currentCountry.id === 'bigdog' && isP1) { alert("小熊熊尋找細肥的中，無法放置！"); return; }
-      if (currentCountry.id === 'pinkbear' && !isP1) { alert("毛巾豬心情低落，無法放置！"); return; }
-    }
 
     if (gameState.selectedIndex === undefined || gameState.selectedIndex === -1) {
       document.getElementById('ui-log').innerText = "請先選擇手牌！";
@@ -449,25 +469,28 @@
     }
 
     const card = gameState.hand[gameState.selectedIndex];
-    let curHoney = gameMode === 'pvp' ? (isP1 ? gameState.p1Honey : gameState.p2Honey) : gameState.p1Honey;
 
-    if (card.id === 'bomb') {
-      if (!gameState.grid[index] || gameState.grid[index].type !== 'obstacle') {
-        alert("炸彈只能炸毀障礙物！");
+    // 合作模式特殊炸彈與邏輯限制
+    if (gameMode === 'story') {
+      if (currentCountry.id === 'bigdog' && isP1) { alert("小熊熊尋找細肥的中，無法放置！"); return; }
+      if (currentCountry.id === 'pinkbear' && !isP1) { alert("毛巾豬心情低落，無法放置！"); return; }
+
+      if (card.id === 'bomb') {
+        if (!gameState.grid[index] || gameState.grid[index].type !== 'obstacle') {
+          alert("炸彈只能炸毀障礙物！");
+          return;
+        }
+        gameState.grid[index] = null;
+        gameState.hand.splice(gameState.selectedIndex, 1);
+        gameState.selectedIndex = -1;
+        alert("💣 成功炸毀障礙物！");
+        updateUI();
         return;
       }
-      gameState.grid[index] = null;
-      gameState.hand.splice(gameState.selectedIndex, 1);
-      gameState.selectedIndex = -1;
-      alert("💣 成功炸毀障礙物！");
-      updateUI();
-      return;
-    }
 
-    if (curHoney < card.cost) { alert("蜜糖不足！"); return; }
-    if (gameState.grid[index] !== null) { alert("此位置無法放置！"); return; }
+      if (gameState.p1Honey < card.cost) { alert("蜜糖不足！"); return; }
+      if (gameState.grid[index] !== null) { alert("此位置無法放置！"); return; }
 
-    if (gameMode === 'story') {
       if (currentCountry.id === 'dolphin' && isP1 && Math.random() < 0.25) {
         gameState.p1Honey -= card.cost;
         gameState.hand.splice(gameState.selectedIndex, 1);
@@ -482,26 +505,32 @@
         updateUI();
         return;
       }
-    }
 
-    if (gameMode === 'pvp') {
-      if (isP1) { gameState.p1Honey -= card.cost; gameState.p1Score += card.points; }
-      else { gameState.p2Honey -= card.cost; gameState.p2Score += card.points; }
-      gameState.grid[index] = { ...card, owner: gameState.activePlayer };
-    } else {
+      // 合作建屋成功
       gameState.p1Honey -= card.cost;
       gameState.p1Score += card.points;
       gameState.grid[index] = { ...card };
       if (card.id === 'dal_house') gameState.dalmatianHouses++;
+
+    } else {
+      // 原版雙人對戰放置邏輯
+      let curHoney = isP1 ? gameState.p1Honey : gameState.p2Honey;
+      if (curHoney < card.cost) { alert("蜜糖不足！"); return; }
+      if (gameState.grid[index] !== null) { alert("此位置已有建築！"); return; }
+
+      if (isP1) { gameState.p1Honey -= card.cost; gameState.p1Score += card.points; }
+      else { gameState.p2Honey -= card.cost; gameState.p2Score += card.points; }
+
+      gameState.grid[index] = { ...card, owner: gameState.activePlayer };
     }
 
     gameState.hand.splice(gameState.selectedIndex, 1);
     gameState.selectedIndex = -1;
-    document.getElementById('ui-log').innerText = `✨ 成功放置 ${card.name}！`;
+    document.getElementById('ui-log').innerText = `✨ 成功建造 ${card.name}！`;
     updateUI();
   }
 
-  /* --- 3 大小遊戲完整邏輯實作 --- */
+  /* --- 合作模式：3 大小遊戲實作 --- */
   function triggerForestMiniGame() {
     const games = ['poker', 'sudoku', 'memory'];
     const selectedGame = games[Math.floor(Math.random() * games.length)];
@@ -522,7 +551,7 @@
         </div>
       `;
     } 
-    // 2. 6x6 簡易數獨點擊解密
+    // 2. 6x6 數獨解密
     else if (selectedGame === 'sudoku') {
       content.innerHTML = `
         <h2>🧩 6x6 森林數獨解密</h2>
@@ -537,12 +566,12 @@
         </div>
       `;
     } 
-    // 3. 圖案記憶連連看
+    // 3. 圖案配對連連看
     else {
       content.innerHTML = `
         <h2>🎴 圖案記憶連連看</h2>
         <p>點擊翻開卡牌，翻出 🍯 即可採集蜂蜜！</p>
-        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:15px 0;" id="memory-cards-container">
+        <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:15px 0;">
           <div class="memory-card" onclick="flipMemoryCard(this, '🍯')">❓</div>
           <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
           <div class="memory-card" onclick="flipMemoryCard(this, '🌸')">❓</div>
@@ -576,20 +605,15 @@
   }
 
   function finishMiniGame(success, reward = 2) {
-    forestMiniGameCount++; // 增加採蜜計數
+    forestMiniGameCount++;
     if (success) {
-      if (gameMode === 'pvp') {
-        if (gameState.activePlayer === 'p1') gameState.p1Honey += reward;
-        else gameState.p2Honey += reward;
-      } else {
-        gameState.p1Honey += reward;
-      }
+      gameState.p1Honey += reward;
     }
     closeModal('minigame-modal');
     updateUI();
   }
 
-  /* --- 黑市 --- */
+  /* --- 黑市交易 --- */
   function openBlackMarket() {
     const modal = document.getElementById('blackmarket-modal');
     const container = document.getElementById('blackmarket-items');
@@ -603,23 +627,17 @@
   }
 
   function buyBlackMarketItem(itemId, cost) {
-    let honey = gameMode === 'pvp' ? (gameState.activePlayer === 'p1' ? gameState.p1Honey : gameState.p2Honey) : gameState.p1Honey;
-    if (honey < cost) { alert("蜜糖不足！"); return; }
-    
-    if (gameMode === 'pvp') {
-      if (gameState.activePlayer === 'p1') gameState.p1Honey -= cost; else gameState.p2Honey -= cost;
-    } else {
-      gameState.p1Honey -= cost;
-    }
+    if (gameState.p1Honey < cost) { alert("蜜糖不足！"); return; }
+    gameState.p1Honey -= cost;
     gameState.hand.push({ id: 'bomb', name: '炸彈卡', icon: '💣', cost: 0, points: 0 });
     alert("🖤 成功購買炸彈卡！已加入手牌！");
     closeModal('blackmarket-modal');
     updateUI();
   }
 
-  /* --- 換回合與結算 --- */
+  /* --- 切換回合與遊戲結算 --- */
   function finishTurn() {
-    forestMiniGameCount = 0; // 重置每回合小遊戲次數
+    forestMiniGameCount = 0; // 進入新回合時重置小遊戲次數
 
     if (gameMode === 'story' && currentCountry.id === 'pinkbear' && gameState.round >= 5) {
       const emptyCells = gameState.grid.map((c, i) => c === null ? i : -1).filter(i => i !== -1);
@@ -689,7 +707,7 @@
       }
 
       if (passed) {
-        markCountryPassed(currentCountry.id); // 記錄過關狀態
+        markCountryPassed(currentCountry.id);
         statusEl.innerText = "🎉 拯救成功！成功完成拯救任務！";
         statusEl.style.color = "#388e3c";
       } else {
